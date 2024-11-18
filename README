@@ -1,0 +1,23 @@
+
+## Conda Enviornment
+
+conda create --name CryoLigate_GIGN
+conda activate CryoLigate_GIGN
+conda install -c conda-forge mamba
+mamba install -c conda-forge mdanalysis
+
+conda config --env --add channels conda-forge
+conda install -c conda-forge numpy swig boost-cpp sphinx sphinx_rtd_theme
+pip install vina   										
+
+conda install conda-forge::openbabel								(No need of this anymore)
+python -m pip install git+https://github.com/Valdes-Tresanco-MS/AutoDockTools_py3		(No need of this anymore)
+
+conda install -c conda-forge -c schrodinger pymol-bundle
+
+Download gnina binary from https://github.com/gnina/gnina
+
+mamba install -c chemem -c conda-forge chemem 			(No need of this anymore)
+pip install BioTEMPy==2.1.1 							(No need of this anymore)
+
+pip install pathlib
