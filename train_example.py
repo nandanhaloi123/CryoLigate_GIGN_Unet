@@ -51,7 +51,7 @@ if __name__ == '__main__':
     graph_type = args.get("graph_type")
     save_model = args.get("save_model")
     batch_size = 10
-    data_root = '../../../../../PDBbind'
+    data_root = '/mnt/cephfs/projects/2023110101_Ligand_fitting_to_EM_maps/PDBbind'
     epochs = 2
     repeats = args.get('repeat')
     early_stop_epoch = args.get("early_stop_epoch")

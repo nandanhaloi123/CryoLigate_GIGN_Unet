@@ -1,0 +1,17 @@
+.venv/
+chimera_logs/
+chimeraX_logs/
+main_logs/
+density_maps/
+__pycache__
+train.py
+train_1.py
+chimera_scripts/*.pyc
+molecule_data/
+delatoms_molecule_data/
+raw_conformers_data/
+delatoms_conformers_data/
+*temp/
+temp*
+raw_molecule_data/
+gnina
