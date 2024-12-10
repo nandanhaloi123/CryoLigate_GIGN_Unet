@@ -67,7 +67,7 @@ def main(
         )
         _, stderr = p.communicate() # catch ChimeraX errors if any
         if p.returncode != 0 or stderr:
-            raise RuntimeError(f"Failed to compute density map: {stderr}")
+            raise RuntimeError(f"{stderr}")
 
         if is_main_log:
             log(

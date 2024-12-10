@@ -439,7 +439,7 @@ def main(
         )
         _, stderr = p.communicate() # catch gnina errors if any
         if p.returncode != 0 or (stderr and "open babel warning" not in stderr.decode().lower()):
-            raise RuntimeError(f"Failed to perform docking for {complex_name}: {stderr}")
+            raise RuntimeError(f"{stderr}")
 
         # split output sdf file to separate pdb files (for convenient cross-correlation check)
         base_docking_filename = "gnina_docked.pdb"
@@ -450,7 +450,7 @@ def main(
             remove_Hs=False,
         )
         if n_poses_saved == 0:
-            raise RuntimeError(f"No docking poses were saved for {complex_name}! Db path: {db_path}.")
+            raise RuntimeError(f"No docking poses were saved for {complex_name}!")
         
         # compute cross-correlations and write them to a file if required
         if write_corrs_to_file:

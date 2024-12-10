@@ -9,11 +9,11 @@
 # max wallclock time
 #SBATCH -t 48:00:00
 # jobname
-#SBATCH -J Maps
+#SBATCH -J Complexes
 
 # queue
-#SBATCH -p lindahl5 -w erco-gpu17
+#SBATCH -p lindahl5 -w erco-gpu01
 
 module load cuda/12
 source setup_chimerax.sh
-python3 good_resolution_maps.py -s 6000 -e 7565 -p 18
+python3 preprocessing.py -s 0 -e 7565 -p 22
