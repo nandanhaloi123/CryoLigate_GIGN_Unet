@@ -15,3 +15,6 @@ delatoms_conformers_data/
 temp*
 raw_molecule_data/
 gnina
+*_chimeraX_output/
+*_main_logs/
+slurm-*.log

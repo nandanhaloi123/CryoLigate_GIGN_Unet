@@ -19,6 +19,7 @@ from utils import (
     find_pdb_ligand_file_in_db,
     find_pdb_protein_file_in_db,
     read_complexes_names_from_file,
+    apply_args_and_kwargs,
 )
 
 from cryoEM_maps.internal_flexibility import (
@@ -150,7 +151,7 @@ def main(
     delete_prob=0.2,
     is_main_log=True,
     main_log_filename="log.txt",
-    main_log_path=os.path.join(os.getcwd(), "main_logs"),
+    main_log_path=os.path.join(os.getcwd(), "maps_main_logs"),
     clear_temp=True,
 ):
     """
@@ -236,22 +237,6 @@ def main(
     finally:
         if clear_temp:  # delete the folder with temporary data if needed
             shutil.rmtree(temp_data)
-
-
-def apply_args_and_kwargs(fn, args, kwargs):
-    """
-    Auxiliary function for running functions inside Pool.starmap from multiprocessing.
-
-    Args:
-        fn - function to call inside Pool.starmap
-        args - positional arguments for fn
-        kwargs - keyword arguments for fn
-
-    Returns:
-        result of the fn call with args and kwargs
-    """
-    print(f"Started {fn.__name__} with args: {args} and kwargs: {kwargs}")
-    return fn(*args, **kwargs)
 
 
 if __name__ == "__main__":

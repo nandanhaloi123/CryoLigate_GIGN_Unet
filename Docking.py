@@ -3,10 +3,15 @@
 ######### Perform docking ############### 
 # from vina import Vina
 import os
+import sys
+import getopt
 import shutil
 import pandas as pd
 import mrcfile
 import numpy as np
+from itertools import repeat
+from multiprocessing.pool import Pool
+from datetime import datetime, timezone
 from subprocess import Popen, PIPE, DEVNULL
 from tqdm import tqdm
 from rdkit import Chem
@@ -22,6 +27,12 @@ from utils import (
     calculate_ligand_size,
     find_pdb_ligand_file_in_db,
     find_pdb_protein_file_in_db,
+    find_mrc_density_file_in_db,
+    log,
+    extract_filename_from_full_path,
+    delete_extension_from_filename,
+    apply_args_and_kwargs,
+    read_complexes_names_from_file,
 
 )
 
@@ -347,12 +358,50 @@ def main(
     db_path,
     base_ligand_name="_ligand.pdb",
     base_protein_name="_protein_processed.pdb",
+    base_density_name="_ligand.mrc",
+    n_pos=10,
+    box_extension=5.0,
+    path_to_gnina=os.getcwd() + os.path.sep + "gnina", 
+    is_main_log=True,
+    main_log_filename="log.txt",
+    main_log_path=os.path.join(os.getcwd(), "docking_main_logs"),
+    write_corrs_to_file=True,
+    threshold_correlation=0.6,
+    not_found_corr_value=0.0,
+    density_resolution=1.0,
+    n_box=16,
+    is_chimeraX_log=True,
+    chimeraX_log_path=os.path.join(os.getcwd(), "chimeraX_logs"),
+    chimeraX_script_path=os.path.join(os.getcwd(), "chimeraX_scripts"),
+    clear_chimeraX_output=True,
 ):
     """
-    The main function that generates docked poses, compute cross correlations for them and write the correlations to a file.
+    The main function that generates docked poses. If required, computes cross correlations for them and 
+    writes the correlations to a file.
 
     Args:
-
+        complex_name - name (id) of the protein-ligand complex
+        db_path - path tp the database with the complexes' data
+        base_ligand_name - base name for the ligand file (used to construct the full name)
+        base_protein_name - base name for the protein file (used to construct the full name)
+        base_density_name - base name for the density file (used to construct the full name)
+        n_pos - number of poses to generate in docking
+        box_extension - used to compute the box size for docking, the box size is ligand_size + box_extension
+        path_to_gnina - path to the gnina executable
+        is_main_log - whether to write logs for the main function
+        main_log_filename - name of the log file for the main function
+        main_log_path - path to the folder where main log files will be stored
+        write_corrs_to_file - whether to write computed correlations to a file 
+        (will be written in db_path/{complex_name}/{complex_name}_gnina_docked_cc.txt)
+        threshold_correlation - threshold correlation value for cross-correlation check
+        not_found_corr_value - the value we use if the correlation for a particular pose wasn't found/computed
+        density_resolution - desired resolution of the map (in Angstrom) that we generate for docking poses
+        n_box - number of points for the map's cubic box
+        is_chimeraX_log - should we write logs for ChimeraX scripts
+        chimeraX_log_path - path to the folder where ChimeraX's log file will be stored
+        (excluding the file's name which will be created automatically)
+        chimeraX_script_path - path to the folder with the python scripts for ChimeraX
+        clear_chimeraX_output - whether to clear ChimeraX output files that are used for extracting cross-correlation values
     """
     try:
         # find ligand file in the database
@@ -365,9 +414,73 @@ def main(
             complex_name, db_path, base_protein_name=base_protein_name
         )
 
+        # find density file in the database
+        density_path_full = find_mrc_density_file_in_db(
+            complex_name, db_path, base_density_name=base_density_name
+        )
+
+        # do docking
+        # generate output .sdf file for gnina docking
+        complex_folder = os.path.join(db_path, complex_name)
+        sdf_docking_filename = (
+            f"{complex_name}_gnina_docked.sdf"
+        )
+        sdf_docking_path_full = os.path.join(complex_folder, sdf_docking_filename)
+
+        # run gnina inside a subporcess
+        p = gnina_docking(
+            ligand_path_full,
+            protein_path_full,
+            density_path_full,
+            sdf_docking_path_full,
+            n_pos,
+            box_extension=box_extension,
+            path_to_gnina=path_to_gnina,
+        )
+        _, stderr = p.communicate() # catch gnina errors if any
+        if p.returncode != 0 or (stderr and "open babel warning" not in stderr.decode().lower()):
+            raise RuntimeError(f"Failed to perform docking for {complex_name}: {stderr}")
+
+        # split output sdf file to separate pdb files (for convenient cross-correlation check)
+        base_docking_filename = "gnina_docked.pdb"
+        n_poses_saved, poses_path_full_list = split_sdf_file_to_pdbs(
+            sdf_docking_path_full,
+            base_docking_filename,
+            pdb_path=complex_folder,
+            remove_Hs=False,
+        )
+        if n_poses_saved == 0:
+            raise RuntimeError(f"No docking poses were saved for {complex_name}! Db path: {db_path}.")
+        
+        # compute cross-correlations and write them to a file if required
+        if write_corrs_to_file:
+            chimeraX_output_base_filename = "output.tmp"
+            chimeraX_output_path = os.path.join(os.getcwd(), f"{complex_name}_chimeraX_output")
+            create_folder(chimeraX_output_path) # create a folder for ChimeraX output if it doesn't exist
+            corrs_path_full = os.path.join(
+                complex_folder,
+                f"{complex_name}_gnina_docked_cc.txt"
+            ) # full path to the fil where correlations will be written
+            filter_docked_poses_by_correlation(
+                poses_path_full_list,
+                density_path_full,
+                threshold_correlation=threshold_correlation,
+                not_found_corr_value=not_found_corr_value,
+                chimeraX_output_base_filename=chimeraX_output_base_filename,
+                chimeraX_output_path=chimeraX_output_path,
+                density_resolution=density_resolution,
+                n_box=n_box,
+                is_log=is_chimeraX_log,
+                log_path=chimeraX_log_path,
+                script_path=chimeraX_script_path,
+                clear_chimeraX_output=clear_chimeraX_output,
+                write_corrs_to_file=write_corrs_to_file,
+                corrs_path_full=corrs_path_full,
+            )
+
         if is_main_log:
             log(
-                f"Successfully computed density map for {complex_name}. Check the map in: {output_density_path_full}.",
+                f"Successfully finished docking for {complex_name}. Check the data in: {complex_folder}.",
                 status="INFO",
                 log_filename=main_log_filename,
                 log_path=main_log_path,
@@ -376,7 +489,7 @@ def main(
     except Exception as e:
         if is_main_log:
             log(
-                f"Failed to compute density map for {complex_name}: {e}",
+                f"Failed to compute docking for {complex_name}: {e}",
                 status="ERROR",
                 log_filename=main_log_filename,
                 log_path=main_log_path,
@@ -410,21 +523,115 @@ def main(
 
     
 if __name__ == '__main__':
-    pass
-    # distance = 5
-    # input_ligand_format = 'mol2'
-    # data_root = '../../../../../PDBbind'
-    # data_dir = os.path.join(data_root, 'PDBBind_Zenodo_6408497')
-    # # data_df = pd.read_csv(os.path.join(data_root, 'toy_examples.csv'))
-    # data_df = pd.read_csv(os.path.join(data_dir, 'PDB_IDs_with_rdkit_length_less_than_16A_succ_gnina.csv'))
-    # # data_df = pd.read_csv(os.path.join(data_dir, 'temp.csv'))
 
-    # ## generate pocket within 5 Ångström around ligand 
-    # #convert_pdb_to_pdbqt(data_dir,data_df)
-    # # Vina_docking(data_dir,data_df)
-    # # gnina_docking(data_dir,data_df)
-    # # save_frames_from_trajectory_pymol(data_dir,data_df)
-    # get_cross_correlation(data_dir,data_df)
+    # path to the database with molecule data
+    db_path = os.path.sep + os.path.sep.join(
+        [
+            "mnt",
+            "cephfs",
+            "projects",
+            "2023110101_Ligand_fitting_to_EM_maps",
+            "PDBbind",
+            "PDBBind_Zenodo_6408497",
+        ]
+    )
+
+    # load molecule names
+    complex_names_csv = (
+        db_path + os.path.sep + "PDB_IDs_with_rdkit_length_less_than_16A_succ_gnina.csv"
+    )
+    complex_names = read_complexes_names_from_file(complex_names_csv)
+
+    # read script's arguments
+    opts, args = getopt.getopt(sys.argv[1:], "s:e:p:")
+    start_index = None  # start index for the complex names
+    end_index = None  # end index for the complex names
+    n_proc = None  # number of processes for multiprocessing (Pool.starmap)
+    for opt, arg in opts:
+        if opt == "-s":
+            start_index = int(arg)
+        elif opt == "-e":
+            end_index = int(arg)
+        elif opt == "-p":
+            n_proc = int(arg)
+
+    assert start_index is not None, "Start index is None after arugment's parsing"
+    assert end_index is not None, "End index is None after arugment's parsing"
+    assert n_proc is not None, "Number of processes is None after arugment's parsing"
+
+    # apply start and end indice to the molecule names
+    complex_names = complex_names[start_index : (end_index + 1)]
+    n_complexes = len(complex_names)
+    print(f"Computing docking for {n_complexes} complexes....")
+
+    # create log folders
+    # NOTE: If is_..._log == True, it's important to create the folders cause the code won't work otherwise!
+    is_chimeraX_log = False
+    chimeraX_log_path = None
+    if is_chimeraX_log:
+        chimeraX_log_path = os.path.join(os.getcwd(), "chimeraX_logs")
+        create_folder(chimeraX_log_path)
+    is_main_log = True
+    main_log_path = None
+    if is_main_log:
+        main_log_filename = (
+            datetime.now(timezone.utc).strftime("%d_%m_%Y_%H.%M.%S.%f")[:-2]
+            + "_main_log.txt"
+        )
+        main_log_path = os.path.join(os.getcwd(), "docking_main_logs")
+        create_folder(main_log_path)
+
+    # specify keyword arguments for the main function
+    base_ligand_name = "_ligand.pdb"
+    base_protein_name = "_protein_processed.pdb"
+    base_density_name = "_nconfs10_genmodedocking_res3.5_nbox16_threshcorr0.3_delprob0.2_low_resolution_forward_model.mrc"
+    n_pos = 10
+    box_extension = 5.0
+    path_to_gnina = os.getcwd() + os.path.sep + "gnina" 
+    write_corrs_to_file = True
+    threshold_correlation = 0.6
+    not_found_corr_value = 0.0
+    density_resolution = 3.5
+    n_box = 16
+    chimeraX_script_path = os.path.join(os.getcwd(), "chimeraX_scripts")
+    clear_chimeraX_output = True
+    main_kwargs = {
+        "base_ligand_name": base_ligand_name,
+        "base_protein_name": base_protein_name,
+        "base_density_name": base_density_name,
+        "n_pos": n_pos,
+        "box_extension": box_extension,
+        "path_to_gnina": path_to_gnina, 
+        "is_main_log": is_main_log,
+        "main_log_filename": main_log_filename,
+        "main_log_path": main_log_path,
+        "write_corrs_to_file": write_corrs_to_file,
+        "threshold_correlation": threshold_correlation,
+        "not_found_corr_value": not_found_corr_value,
+        "density_resolution": density_resolution,
+        "n_box": n_box,
+        "is_chimeraX_log": is_chimeraX_log,
+        "chimeraX_log_path": chimeraX_log_path,
+        "chimeraX_script_path": chimeraX_script_path,
+        "clear_chimeraX_output": clear_chimeraX_output,
+    }
+
+    # run computations in several Processes to speed up
+    # generate args and kwargs iterables for Pool.starmap()
+    main_args_iter = zip(
+        complex_names,
+        repeat(db_path, n_complexes),
+    )  # iterable for positional arguments
+    main_kwargs_iter = repeat(main_kwargs, n_complexes)
+    starmap_args_iter = zip(
+        repeat(main, n_complexes), main_args_iter, main_kwargs_iter
+    )  # combined positional and keyword arguments for Pool.starmap()
+
+    with Pool(n_proc) as pool:
+        result = pool.starmap(apply_args_and_kwargs, starmap_args_iter)
+        for r in result:
+            pass
+
     
 
 

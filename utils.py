@@ -1274,3 +1274,20 @@ def find_mrc_density_file_in_db(
     density_path_full = find_file_in_db(complex_name, db_path, density_filename)
 
     return density_path_full
+
+
+
+def apply_args_and_kwargs(fn, args, kwargs):
+    """
+    Auxiliary function for running functions inside Pool.starmap from multiprocessing.
+
+    Args:
+        fn - function to call inside Pool.starmap
+        args - positional arguments for fn
+        kwargs - keyword arguments for fn
+
+    Returns:
+        result of the fn call with args and kwargs
+    """
+    print(f"Started {fn.__name__} with args: {args} and kwargs: {kwargs}")
+    return fn(*args, **kwargs)

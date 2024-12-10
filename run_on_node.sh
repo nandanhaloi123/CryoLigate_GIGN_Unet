@@ -12,8 +12,8 @@
 #SBATCH -J Maps
 
 # queue
-#SBATCH -p lindahl5 -w erco-gpu03
+#SBATCH -p lindahl5 -w erco-gpu17
 
 module load cuda/12
 source setup_chimerax.sh
-python3 cryoEM_maps/main.py -s 2000 -e 2999 -p 18
+python3 good_resolution_maps.py -s 6000 -e 7565 -p 18
