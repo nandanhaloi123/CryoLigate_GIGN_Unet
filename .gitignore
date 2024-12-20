@@ -13,8 +13,9 @@ raw_conformers_data/
 delatoms_conformers_data/
 *temp/
 temp*
-raw_molecule_data/
 gnina
 *_chimeraX_output/
 *_main_logs/
 slurm-*.log
+*.pkl
+train_2.py

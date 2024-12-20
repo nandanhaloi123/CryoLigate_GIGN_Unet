@@ -49,7 +49,7 @@ def rdkit_conformers(
     """
 
     # read the ligand file
-    mol = read_molecule(ligand_path_full, remove_Hs=False)
+    mol = read_molecule(ligand_path_full, remove_Hs=False, sanitize=False)
     original_mol = Chem.Mol(mol)  # copy original molecule for future allignment
 
     # specify parameters for conformers generation

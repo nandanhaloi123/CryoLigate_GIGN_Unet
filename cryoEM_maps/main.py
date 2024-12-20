@@ -342,7 +342,7 @@ if __name__ == "__main__":
         os.path.join(
             db_path,
             complex_name,
-            f"{complex_name}_nconfs{n_confs}_genmode_{generation_mode}_res{density_resolution}_nbox{n_box}_threshcorr{threshold_correlation}_delprob{delete_prob}_low_resolution_forward_model_new.mrc",
+            f"{complex_name}_nconfs{n_confs}_genmode_{generation_mode}_res{density_resolution}_nbox{n_box}_threshcorr{threshold_correlation}_delprob{delete_prob}_low_resolution_forward_model.mrc",
         )
         for complex_name in complex_names
     )

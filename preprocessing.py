@@ -172,7 +172,7 @@ def main(
 
     Args:
         complex_name - name (id) of the protein-ligand complex
-        db_path - path tp the database with the complexes' data
+        db_path - path to the database with the complexes' data
         base_correlation_name - base name for the file with docking correlations (used to construct the full name)
         threshold_correlation - threshold value for the cross-correlation check
         base_protein_name - base name for the protein file (used to construct the full name)

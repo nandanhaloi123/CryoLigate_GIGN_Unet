@@ -616,6 +616,7 @@ def read_molecules_from_sdf(
     sdf_path_full,
     n_mols=1,
     remove_Hs=False,
+    sanitize=False,
 ):
     """
     Reads molecules data from the given .sdf file using RDKit library.
@@ -624,6 +625,7 @@ def read_molecules_from_sdf(
         sdf_path_full - full path to the input .sdf file (including its name)
         n_mols - expected number of molecules to read from the file
         remove_Hs - whether to remove hydrogen atoms from the molecule when reading
+        sanitize - whether to sanitize molecule using RDKit
 
     Returns:
         mols - list with RDKit molecule objects obtained from the given file
@@ -633,7 +635,7 @@ def read_molecules_from_sdf(
 
     mols = []  # list to store RDKit molecule objects
 
-    with Chem.SDMolSupplier(sdf_path_full, sanitize=False, removeHs=remove_Hs) as suppl:
+    with Chem.SDMolSupplier(sdf_path_full, sanitize=sanitize, removeHs=remove_Hs) as suppl:
         for mol in suppl:
             if mol is None:
                 print(
@@ -652,6 +654,7 @@ def read_molecules_from_sdf(
 def read_molecule_from_pdb(
     pdb_path_full,
     remove_Hs=False,
+    sanitize=False,
 ):
     """
     Reads one molecule data from the given .pdb file using RDKit library.
@@ -661,20 +664,20 @@ def read_molecule_from_pdb(
     Args:
         pdb_path_full - full path to the input .pdb file (including its name)
         remove_Hs - whether to remove hydrogen atoms from the molecule when reading
-
+        sanitize - whether to sanitize molecule using RDKit
     Returns:
         mol - RDKit molecule object obtained from the given file
     """
 
     assert pdb_path_full.endswith(".pdb"), "pdb filename must end with .pdb!"
 
-    mol = Chem.MolFromPDBFile(pdb_path_full, sanitize=False, removeHs=remove_Hs)
+    mol = Chem.MolFromPDBFile(pdb_path_full, sanitize=sanitize, removeHs=remove_Hs)
 
     return mol
 
 
 def read_molecule(
-    path_full, remove_Hs=True
+    path_full, remove_Hs=True, sanitize=False,
 ):
     """
     Reads one molecule data from the given file and converts it to an RDKit molecule object.
@@ -682,6 +685,7 @@ def read_molecule(
     Args:
         path_full - full path to the input molecule file
         remove_Hs - whether to remove hydrogen atoms from the molecule when reading
+        sanitize - whether to sanitize molecule using RDKit
 
     Returns:
         mol - RDKit molecule object obtained from the given file
@@ -696,13 +700,13 @@ def read_molecule(
     match file_format:
         case "sdf":
             mols = read_molecules_from_sdf(
-                path_full, n_mols=1, remove_Hs=remove_Hs
+                path_full, n_mols=1, remove_Hs=remove_Hs, sanitize=sanitize,
             )
             return mols[0]
 
         case "pdb":
             mol = read_molecule_from_pdb(
-                path_full, remove_Hs=remove_Hs
+                path_full, remove_Hs=remove_Hs, sanitize=sanitize,
             )
             return mol
 
@@ -1275,6 +1279,29 @@ def find_mrc_density_file_in_db(
 
     return density_path_full
 
+
+def find_txt_file_in_db(
+    complex_name, db_path, base_txt_name="_gnina_docked_cc.txt"
+):
+    """
+    Finds a .txt file for the given complex in the database.
+    If the file wasn't found, raises RuntimeError.
+
+    Args:
+        complex_name - name (id) of the complex
+        db_path - path to the database with complex files
+        base_txt_name - base name for the txt file (used to construct the full name)
+
+    Returns:
+        txt_path_full - full path to the txt file (icnlduing its name)
+    """
+    assert base_txt_name.endswith(".txt"), "txt file must end with .txt!"
+
+    # try to find .txt file
+    txt_filename = complex_name + base_txt_name
+    txt_path_full = find_file_in_db(complex_name, db_path, txt_filename)
+
+    return txt_path_full
 
 
 def apply_args_and_kwargs(fn, args, kwargs):

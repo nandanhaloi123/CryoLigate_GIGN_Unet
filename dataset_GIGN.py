@@ -1,5 +1,7 @@
 # %%
 import os
+import sys
+import getopt
 import pandas as pd
 import numpy as np
 import pickle
@@ -8,6 +10,8 @@ import multiprocessing
 from itertools import repeat
 import networkx as nx
 import torch 
+from datetime import datetime, timezone
+from multiprocessing.pool import Pool
 from torch.utils.data import Dataset, DataLoader
 from rdkit import Chem
 from rdkit import RDLogger
@@ -18,6 +22,15 @@ import mrcfile
 RDLogger.DisableLog('rdApp.*')
 np.set_printoptions(threshold=np.inf)
 warnings.filterwarnings('ignore')
+
+from utils import(
+    find_txt_file_in_db,
+    delete_extension_from_filename,
+    log,
+    apply_args_and_kwargs,
+    find_mrc_density_file_in_db,
+    create_folder,
+)
 
 # %%
 def one_of_k_encoding(k, possible_values):
@@ -87,8 +100,33 @@ def inter_graph(ligand, pocket, dis_threshold = 5.):
 
     return edge_index_inter
 
+def normalize_density(density):
+    """
+    Normalizes given density array:
+    1) Replaces all negative elements with zero
+    2) Applies min-max normalization
+
+    Args:
+        density - array with density values
+
+    Returns:
+        density_normalized - array with normalized density values
+    """
+
+    # replace all negative elements with zero
+    density[density < 0] = 0
+
+    # apply min-max normalization
+    min_value = np.min(density)
+    max_value = np.max(density)
+    density_normalized = (density - min_value) / (max_value - min_value)
+
+    return density_normalized
+
+
+
 # %%
-def mols2graphs(complex_path, label, save_path, dis_threshold=5.):
+def mols2graphs(complex_path, label_path, low_res_density_path, save_path, dis_threshold=5.):
 
     with open(complex_path, 'rb') as f:
         ligand, pocket = pickle.load(f)
@@ -103,16 +141,252 @@ def mols2graphs(complex_path, label, save_path, dis_threshold=5.):
     x = torch.cat([x_l, x_p], dim=0)
     edge_index_intra = torch.cat([edge_index_l, edge_index_p+atom_num_l], dim=-1)
     edge_index_inter = inter_graph(ligand, pocket, dis_threshold=dis_threshold)
-    # print(label)
-    # y = torch.FloatTensor([label])
-    y = torch.tensor(mrcfile.read(label)).unsqueeze(0).unsqueeze(0)
+
+    # read and normalize label (good resolution) density
+    label_density = mrcfile.read(label_path)
+    label_density_normalized = normalize_density(label_density)
+    y = torch.tensor(label_density_normalized).unsqueeze(0).unsqueeze(0)
+
+    # read and normalize input (bad resolution) density
+    low_res_density = mrcfile.read(low_res_density_path)
+    low_res_density_normalized = normalize_density(low_res_density)
+    low_res_dens = torch.tensor(low_res_density_normalized).unsqueeze(0).unsqueeze(0)
+
     pos = torch.concat([pos_l, pos_p], dim=0)
     split = torch.cat([torch.zeros((atom_num_l, )), torch.ones((atom_num_p,))], dim=0)
     
-    data = Data(x=x, edge_index_intra=edge_index_intra, edge_index_inter=edge_index_inter, y=y, pos=pos, split=split)
+    data = Data(
+        x=x, 
+        edge_index_intra=edge_index_intra, 
+        edge_index_inter=edge_index_inter, 
+        y=y, 
+        pos=pos, 
+        split=split, 
+        low_res_dens=low_res_dens
+    )
 
     torch.save(data, save_path)
     # return data
+
+
+def get_graphs(
+    complex_name,
+    db_path,
+    base_corr_check_filename="_corr0.6_passed_complexes.txt",
+    base_label_filename="_ligand_res1.0_boxed_16A.mrc",
+    base_low_res_density_filename="_nconfs10_genmodedocking_res3.5_nbox16_threshcorr0.3_delprob0.2_low_resolution_forward_model.mrc",
+    create=False,
+    dis_threshold=5,
+    is_log=True,
+    log_filename="log.txt",
+    log_path=os.path.join(os.getcwd(), "dataset_GIGN_main_logs"),
+):
+    """
+    If create==False just checks if the graphs for complexes from corr_check_file exist and returns those that exist.
+    If create==True creates graphs for complexes from corr_check_file and returns paths to those that were successfully created.
+
+    Args:
+        complex_name - name (id) of the protein-ligand complex
+        db_path - path to the database with the complexes' data
+        base_corr_check_filename - base name for the file with complexes that passed cross-correlation check
+        (used to construct the full name)
+        base_label_filename - base name for the file with label (target) density (used to construct the full name)
+        base_low_res_density_filename - base name for the file with low resolution density (used to construct the full name)
+        create - whether we should create the graphs
+        is_log - whether we should write logs for the function
+        log_filename - name of the log file (needed only if is_log==True)
+        log_path - path to the log file excluding its name (needed only if is_log==True)
+
+    Returns:
+        list of full paths to found/created graphs
+    """
+
+    if is_log:
+        log(
+            f"{"Create" if create else "Look for"} graphs for {complex_name}. Db path: {db_path}.",
+            status="INFO",
+            log_path=log_path,
+            log_filename=log_filename,
+        )
+
+    if create: # create the graphs if required
+        graphs_created = []
+        try:
+            corr_check_file_path = find_txt_file_in_db(
+                                    complex_name,
+                                    db_path,
+                                    base_txt_name=base_corr_check_filename 
+                                ) # path to the complexes passed cross-correlation check
+            label_path = find_mrc_density_file_in_db(
+                                    complex_name,
+                                    db_path,
+                                    base_density_name=base_label_filename 
+                                ) # path to the target (good resolution) densities
+            low_res_density_path = find_mrc_density_file_in_db(
+                                    complex_name,
+                                    db_path,
+                                    base_density_name=base_low_res_density_filename
+                                ) # path to the input (low resolution) densities
+            graphs_created = create_graphs(
+                            corr_check_file_path,
+                            label_path,
+                            low_res_density_path,
+                            dis_threshold=dis_threshold,
+                            is_log=is_log,
+                            log_filename=log_filename,
+                            log_path=log_path,
+                            ) 
+        except Exception as e:
+            if is_log:
+                log(
+                    f"Failed to call create_graphs() function for the complex {complex_name}: {e}! Db path: {db_path}.",
+                    status="ERROR",
+                    log_path=log_path,
+                    log_filename=log_filename,
+                )
+        return graphs_created
+
+    else: # or try to find them
+        graphs_found = []
+        try:
+            corr_check_file_path = find_txt_file_in_db(
+                                    complex_name,
+                                    db_path,
+                                    base_txt_name=base_corr_check_filename 
+                                ) # path to the complexes passed cross-correlation check
+            graphs_found = find_graphs(
+                            corr_check_file_path,
+                            is_log=is_log,
+                            log_filename=log_filename,
+                            log_path=log_path,
+                            )
+        except Exception as e:
+            if is_log:
+                log(
+                    f"Failed to call find_graphs() function or the complex {complex_name}: {e}! Db path: {db_path}.",
+                    status="ERROR",
+                    log_path=log_path,
+                    log_filename=log_filename,
+                )
+        return graphs_found
+
+
+def create_graphs(    
+    corr_check_file_path,
+    label_path,
+    low_res_density_path,
+    dis_threshold=5,
+    is_log=True,
+    log_filename="log.txt",
+    log_path=os.path.join(os.getcwd(), "dataset_GIGN_main_logs"),
+):
+    """
+    Creates graphs for complexes from corr_check_file and returns paths to those that were successfully created.
+
+    Args:
+        corr_check_file_path - full path to the file with path to the complexes that passed cross-correlation check
+        label_path - full path to the label (target) density for the complexes
+        low_res_density_path - full path to the low resolution density for the complexes
+        is_log - whether we should write logs for the function
+        log_filename - name of the log file (needed only if is_log==True)
+        log_path - path to the log file excluding its name (needed only if is_log==True)
+    Returns:
+        graphs_created - list with full paths to the created graphs
+    """
+
+    paths_to_complexes = [] # list to store paths to the complexes for which graphs should be created
+    graphs_to_create = [] # list to store paths to the graphs that should be created
+    graphs_created = [] # list to store paths to graphs that were succesfully created 
+
+    # read complexes that passed cross-correlation check
+    with open(corr_check_file_path, "r") as complex_file:
+        for line in complex_file:
+            line = line.strip()
+            paths_to_complexes.append(line)
+            graphs_to_create.append(delete_extension_from_filename(line) + ".pyg")
+
+    # create graphs for those complexes
+    for i in range(len(paths_to_complexes)):
+        try:
+            complex_path = paths_to_complexes[i]
+            graph_path = graphs_to_create[i]
+            mols2graphs(
+                complex_path,
+                label_path,
+                low_res_density_path,
+                graph_path,
+                dis_threshold=dis_threshold
+            )
+            graphs_created.append(graph_path)
+        except Exception as e:
+            if is_log:
+                log(
+                    f"Failed to create graph for complex {complex_path}: {e}",
+                    status="ERROR",
+                    log_path=log_path,
+                    log_filename=log_filename,
+                )
+    if is_log:
+        log(
+            f"Created graphs for {len(graphs_created)} out of {len(graphs_to_create)} complexes from {corr_check_file_path}.",
+            status="INFO",
+            log_path=log_path,
+            log_filename=log_filename,
+        )   
+
+    return graphs_created
+
+
+def find_graphs(    
+    corr_check_file_path,
+    is_log=True,
+    log_filename="log.txt",
+    log_path=os.path.join(os.getcwd(), "dataset_GIGN_main_logs"),
+):
+    """
+    Checks if the graphs for complexes from corr_check_file exist and returns those that exist.
+
+    Args:
+        corr_check_file_path - full path to the file with path to the complexes that passed cross-correlation check
+        is_log - whether we should write logs for the function
+        log_filename - name of the log file (needed only if is_log==True)
+        log_path - path to the log file excluding its name (needed only if is_log==True)
+    Returns:
+        graphs_found - list with full paths to the graphs that were found
+    """
+
+    graphs_to_find = [] # list to store paths to the graphs that should be found
+    graphs_found = [] # list to store paths to graphs that were succesfully found 
+
+    # read complexes that passed cross-correlation check
+    with open(corr_check_file_path, "r") as complex_file:
+        for line in complex_file:
+            line = line.strip()
+            graphs_to_find.append(delete_extension_from_filename(line) + ".pyg")
+    #NOTE TODO: remove the thing below, we need all graphs
+    graphs_to_find = graphs_to_find[:1]
+    # look for graphs for those complexes
+    for graph_path in graphs_to_find:
+        if os.path.isfile(graph_path):
+            graphs_found.append(graph_path)
+        else:
+            if is_log:
+                log(
+                    f"Failed to find graph {graph_path}",
+                    status="ERROR",
+                    log_path=log_path,
+                    log_filename=log_filename,
+            )
+    if is_log:
+        log(
+            f"Found {len(graphs_found)} out of {len(graphs_to_find)} graphs for complexes from {corr_check_file_path}.",
+            status="INFO",
+            log_path=log_path,
+            log_filename=log_filename,
+        )   
+
+    return graphs_found
+
 
 # %%
 class PLIDataLoader(DataLoader):
@@ -123,54 +397,78 @@ class GraphDataset(Dataset):
     """
     This class is used for generating graph objects using multi process
     """
-    def __init__(self, data_dir, data_df, dis_threshold=5, graph_type='Graph_GIGN', num_process=8, create=False):
+    def __init__(
+        self, 
+        data_dir, 
+        data_df, 
+        dis_threshold=5, 
+        graph_type='Graph_GIGN', 
+        num_process=8, 
+        create=False,
+        base_corr_check_filename="_corr0.6_passed_complexes.txt",
+        base_label_filename="_ligand_res1.0_boxed_16A.mrc",
+        base_low_res_density_filename="_nconfs10_genmodedocking_res3.5_nbox16_threshcorr0.3_delprob0.2_low_resolution_forward_model.mrc",
+        is_log=True,
+        log_path=os.path.join(os.getcwd(), "dataset_GIGN_main_logs"),
+    ):
         self.data_dir = data_dir
         self.data_df = data_df
         self.dis_threshold = dis_threshold
         self.graph_type = graph_type
         self.create = create
-        self.graph_paths = None
-        self.complex_ids = None
+        self.graph_paths = []
+        self.complex_ids = []
         self.num_process = num_process
+        self.base_corr_check_filename = base_corr_check_filename
+        self.base_label_filename = base_label_filename
+        self.base_low_res_density_filename = base_low_res_density_filename
+        self.is_log = is_log
+        self.log_path = log_path
         self._pre_process()
 
     def _pre_process(self):
-        data_dir = self.data_dir
-        data_df = self.data_df
-        graph_type = self.graph_type
-        dis_thresholds = repeat(self.dis_threshold, len(data_df))
+        # dis_thresholds = repeat(self.dis_threshold, len(data_df))
 
-        complex_path_list = []
-        complex_id_list = []
-        # pKa_list = []
-        graph_path_list = []
-        EM_path_list = []
-        for i, row in data_df.iterrows():
-            # cid, pKa = row['pdbid'], float(row['-logKd/Ki'])
-            cid = row['pdbid']
-            print(cid)
-            complex_dir = os.path.join(data_dir, cid)
-            graph_path = os.path.join(complex_dir, f"{graph_type}-{cid}_{self.dis_threshold}A.pyg")
-            complex_path = os.path.join(complex_dir, f"{cid}_{self.dis_threshold}A.rdkit")
-            EM_path = os.path.join(complex_dir, f"{cid}_ligand_scaled_boxed_16A.mrc")
+        self.complex_ids = [row['pdbid'] for i, row in self.data_df.iterrows()]
+        n_cids = len(self.complex_ids)
 
-            complex_path_list.append(complex_path)
-            complex_id_list.append(cid)
-            # pKa_list.append(pKa)
-            graph_path_list.append(graph_path)
-            EM_path_list.append(EM_path)
+        # construct args and kwargs for get_graphs() function
+        graph_args_iter = zip(
+            self.complex_ids,
+            repeat(self.data_dir, n_cids),
+        )  # iterable for positional arguments
 
-        if self.create:
-            print('Generate complex graph...')
-            # multi-thread processing
-            pool = multiprocessing.Pool(self.num_process)
-            pool.starmap(mols2graphs,
-                            zip(complex_path_list, EM_path_list, graph_path_list, dis_thresholds))
-            pool.close()
-            pool.join()
+        log_filename = None
+        if self.is_log:
+            log_filename = (
+            datetime.now(timezone.utc).strftime("%d_%m_%Y_%H.%M.%S.%f")[:-2]
+            + "_main_log.txt"
+            )
+            create_folder(self.log_path)
+            
+        graph_kwargs = {
+            "base_corr_check_filename": self.base_corr_check_filename,
+            "base_label_filename": self.base_label_filename,
+            "base_low_res_density_filename": self.base_low_res_density_filename,
+            "create": self.create,
+            "dis_threshold": self.dis_threshold,
+            "is_log": self.is_log,
+            "log_filename": log_filename,
+            "log_path": self.log_path
+        }
+        graph_kwargs_iter = repeat(graph_kwargs, n_cids) # iterable for keyword arguments
+        starmap_args_iter = zip(
+            repeat(get_graphs, n_cids), graph_args_iter, graph_kwargs_iter
+        )  # combined positional and keyword arguments for Pool.starmap()
 
-        self.graph_paths = graph_path_list
-        self.complex_ids = complex_id_list
+        # run computations in multiple processes
+        with Pool(self.num_process) as pool:
+            result = pool.starmap(apply_args_and_kwargs, starmap_args_iter)
+
+        for res in result:
+            for path in res:
+                self.graph_paths.append(path)
+
 
     def __getitem__(self, idx):
         return torch.load(self.graph_paths[idx])
@@ -179,18 +477,59 @@ class GraphDataset(Dataset):
         return Batch.from_data_list(batch)
 
     def __len__(self):
-        return len(self.data_df)
+        return len(self.graph_paths)
 
-# if __name__ == '__main__':
-#    data_root = '../../../../../PDBbind'
-#    toy_dir = os.path.join(data_root, 'PDBBind_Zenodo_6408497')
-#    toy_df = pd.read_csv(os.path.join(toy_dir, "PDB_IDs_with_rdkit_length_less_than_16A.csv"))
-#    toy_set = GraphDataset(toy_dir, toy_df, graph_type='Graph_GIGN', dis_threshold=5, create=True)
-#    train_loader = PLIDataLoader(toy_set, batch_size=10, shuffle=True, drop_last=True)
+if __name__ == '__main__':
+    # read script's arguments
+    opts, args = getopt.getopt(sys.argv[1:], "p:")
+    num_process = None  # number of processes for multiprocessing (Pool.starmap)
+    for opt, arg in opts:
+        if opt == "-p":
+            num_process = int(arg)
+    assert num_process is not None, "Number of processes is None after arugment's parsing"
 
-#    for data in train_loader:
-#        label = data.y
-#        print(label.size())
+    # path to the database
+    data_dir = os.path.sep + os.path.sep.join(
+        [
+            "mnt",
+            "cephfs",
+            "projects",
+            "2023110101_Ligand_fitting_to_EM_maps",
+            "PDBbind",
+            "PDBBind_Zenodo_6408497",
+        ]
+    )
 
+    # load molecule names
+    complex_names_csv = (
+        data_dir + os.path.sep + "PDB_IDs_with_rdkit_length_less_than_16A_succ_gnina.csv"
+    )
+    data_df = pd.read_csv(complex_names_csv)
+    # data_df = data_df.iloc[:5]
+    print(f"Computing graphs for {len(data_df)} complexes....")
+    # generate dataset of graphs
+    dis_threshold = 5
+    graph_type = 'Graph_GIGN' 
+    create = True
+    base_corr_check_filename = "_corr0.6_passed_complexes.txt"
+    base_label_filename = "_ligand_res1.0_boxed_16A.mrc"
+    base_low_res_density_filename = "_nconfs10_genmodedocking_res3.5_nbox16_threshcorr0.3_delprob0.2_low_resolution_forward_model.mrc"
+    is_log = True
+    log_path = os.path.join(os.getcwd(), "dataset_GIGN_main_logs")
+    dataset = GraphDataset(
+        data_dir,
+        data_df,
+        dis_threshold=dis_threshold,
+        graph_type=graph_type,
+        num_process=num_process,
+        create=create,
+        base_corr_check_filename=base_corr_check_filename,
+        base_label_filename=base_label_filename,
+        base_low_res_density_filename=base_low_res_density_filename,
+        is_log=is_log,
+        log_path=log_path
+    )
 
-# %%
+    print(len(dataset.graph_paths))
+    print(len(dataset))
+    print(dataset.graph_paths)

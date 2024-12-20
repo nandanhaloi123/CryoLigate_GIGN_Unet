@@ -18,25 +18,34 @@ class GIGN(nn.Module):
         output_shape = (1, 16, 16, 16)
         
         self.MLP1DTo3D = MLP1DTo3D(hidden_dim, output_shape)
-        self.UNet3D = UNet3D(in_channels=1, num_classes=1)
+        self.UNet3D = UNet3D(in_channels=1, num_classes=1) #NOTE TODO: change in_channels=2 is use low resolution maps
         
         #self.fc = FC(hidden_dim, hidden_dim, 3, 0.1, 1)
 
     def forward(self, data):
-        x, edge_index_intra, edge_index_inter, pos = \
-        data.x, data.edge_index_intra, data.edge_index_inter, data.pos
+        #NOTE TODO: return low_res_dens
+        x, edge_index_intra, edge_index_inter, pos, low_res_dens = \
+        data.x, data.edge_index_intra, data.edge_index_inter, data.pos, data.low_res_dens
+        # x, edge_index_intra, edge_index_inter, pos = \
+        # data.x, data.edge_index_intra, data.edge_index_inter, data.pos
 
-        x = self.lin_node(x)
-        x = self.gconv1(x, edge_index_intra, edge_index_inter, pos)
-        x = self.gconv2(x, edge_index_intra, edge_index_inter, pos)
-        x = self.gconv3(x, edge_index_intra, edge_index_inter, pos)
-        #print("Before global_add_pool:", x.size())
-        x = global_add_pool(x, data.batch)
-        #print("After global_add_pool:", x.size())
-        x = self.MLP1DTo3D(x)
-        #print("After MLP1DTo3D:", x.size())
-        x = self.UNet3D(x)
-        #print("After UNet3D:", x.size())
+        # # NOTE TODO: return Graph NN
+        # x = self.lin_node(x)
+        # x = self.gconv1(x, edge_index_intra, edge_index_inter, pos)
+        # x = self.gconv2(x, edge_index_intra, edge_index_inter, pos)
+        # x = self.gconv3(x, edge_index_intra, edge_index_inter, pos)
+        # # print("Before global_add_pool:", x.size())
+        # x = global_add_pool(x, data.batch)
+        # # print("After global_add_pool:", x.size())
+        # x = self.MLP1DTo3D(x)
+        # print("After MLP1DTo3D:", x.size())
+        # # print("Low res density size: ", low_res_dens.size())
+        # # NOTE TODO: return concatenation
+        # x = torch.concat((x, low_res_dens), dim=1)
+        # print("After concat with low res density:", x.size())
+        # NOTE TODO: return Unet3D
+        x = self.UNet3D(low_res_dens)
+        # print("After UNet3D:", x.size())
         
         # x = self.fc(x)
         # print("After FC:", x.size())
