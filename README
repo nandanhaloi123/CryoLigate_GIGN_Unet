@@ -24,12 +24,12 @@ pip install pathlib
 
 
 ## Conda Enviornment (ELisei Nov 2024)
-conda create --name CryoLigate_GIGN
+conda create --name CryoLigate_GIGN python=3.12.7
 conda activate CryoLigate_GIGN
 conda install -c conda-forge mamba
 mamba install -c conda-forge mdanalysis
 conda config --env --add channels conda-forge
-conda install -c conda-forge numpy swig boost-cpp sphinx sphinx_rtd_themey
+conda install -c conda-forge numpy swig boost-cpp sphinx sphinx_rtd_themey (NOTE: sphinx_rtd_themey failed to load on berzilius)
 conda install -c conda-forge -c schrodinger pymol-bundle
 pip install rdkit
 pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118

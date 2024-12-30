@@ -19,3 +19,5 @@ gnina
 slurm-*.log
 *.pkl
 train_2.py
+train_3.py
+train_4.py

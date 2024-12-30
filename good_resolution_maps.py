@@ -22,7 +22,8 @@ def main(
     main_log_filename="log.txt",
     main_log_path=os.path.join(os.getcwd(), "docking_main_logs"),
     density_resolution=1.0,
-    n_box=16,
+    n_box=32,
+    grid_spacing=0.5,
     is_chimeraX_log=True,
     chimeraX_log_path=os.path.join(os.getcwd(), "chimeraX_logs"),
     chimeraX_script_path=os.path.join(os.getcwd(), "chimeraX_scripts"),
@@ -39,6 +40,7 @@ def main(
         main_log_path - path to the folder where main log files will be stored
         density_resolution - desired resolution of the map (in Angstrom) that we generate for docking poses
         n_box - number of points for the map's cubic box
+        grid_spacing - grid spacing for the cubic map
         is_chimeraX_log - should we write logs for ChimeraX scripts
         chimeraX_log_path - path to the folder where ChimeraX's log file will be stored
         (excluding the file's name which will be created automatically)
@@ -54,13 +56,14 @@ def main(
         complex_folder = os.path.join(db_path, complex_name) # folder with the complex data
         output_density_path_full = os.path.join(
             complex_folder,
-            f"{complex_name}_ligand_res{density_resolution}_boxed_{n_box}A.mrc"
+            f"{complex_name}_ligand_res_{density_resolution}_gridpsace_{grid_spacing}_nbox_{n_box}_size_{int(n_box*grid_spacing)}A.mrc"
         )
         p = compute_density_map_in_chimeraX(
             ligand_path_full,
             output_density_path_full,
             density_resolution=density_resolution,
             n_box=n_box,
+            grid_spacing=grid_spacing,
             is_log=is_chimeraX_log,
             log_path=chimeraX_log_path,
             script_path=chimeraX_script_path
@@ -148,8 +151,9 @@ if __name__ == '__main__':
 
     # specify keyword arguments for the main function
     base_ligand_name = "_ligand.pdb"
-    density_resolution = 1.0
-    n_box = 16
+    density_resolution = 4.0
+    n_box = 32
+    grid_spacing = 0.5
     chimeraX_script_path = os.path.join(os.getcwd(), "chimeraX_scripts")
     main_kwargs = {
         "base_ligand_name": base_ligand_name,
@@ -158,6 +162,7 @@ if __name__ == '__main__':
         "main_log_path": main_log_path,
         "density_resolution": density_resolution,
         "n_box": n_box,
+        "grid_spacing": grid_spacing,
         "is_chimeraX_log": is_chimeraX_log,
         "chimeraX_log_path": chimeraX_log_path,
         "chimeraX_script_path": chimeraX_script_path,

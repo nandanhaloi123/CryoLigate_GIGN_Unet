@@ -37,7 +37,8 @@ def generate_low_resolution_density(
     generation_mode="docking",
     conformers_kwargs={},
     density_resolution=3.5,
-    n_box=16,
+    n_box=32,
+    grid_spacing=0.5,
     is_chimeraX_log=True,
     chimeraX_log_path=os.path.join(os.getcwd(), "chimeraX_logs"),
     chimeraX_script_path=os.path.join(os.getcwd(), "chimeraX_scripts"),
@@ -59,6 +60,7 @@ def generate_low_resolution_density(
         conformers_kwargs - keyword parameters for conformers generation
         density_resolution - desired resolution of the map (in Angstrom)
         n_box - number of points for the map's cubic box
+        grid_spacing - grid spacing for the cubic map
         is_chimeraX_log - should we write logs for ChimeraX scripts
         chimeraX_log_path - path to the folder where ChimeraX's log file will be stored
         (excluding the file's name which will be created automatically)
@@ -92,6 +94,7 @@ def generate_low_resolution_density(
         temp_data=temp_data,
         density_resolution=density_resolution,
         n_box=n_box,
+        grid_spacing=grid_spacing,
         is_chimeraX_log=is_chimeraX_log,
         chimeraX_log_path=chimeraX_log_path,
         chimeraX_script_path=chimeraX_script_path,
@@ -120,6 +123,7 @@ def generate_low_resolution_density(
         output_density_path_full,
         density_resolution=density_resolution,
         n_box=n_box,
+        grid_spacing=grid_spacing,
         is_log=is_chimeraX_log,
         log_path=chimeraX_log_path,
         script_path=chimeraX_script_path,
@@ -141,7 +145,8 @@ def main(
     generation_mode="docking",
     conformers_kwargs={},
     density_resolution=3.5,
-    n_box=16,
+    n_box=32,
+    grid_spacing=0.5,
     is_chimeraX_log=True,
     chimeraX_log_path=os.path.join(os.getcwd(), "chimeraX_logs"),
     chimeraX_script_path=os.path.join(os.getcwd(), "chimeraX_scripts"),
@@ -168,6 +173,7 @@ def main(
         conformers_kwargs - keyword parameters for conformers generation
         density_resolution - desired resolution of the map (in Angstrom)
         n_box - number of points for the map's cubic box
+        grid_spacing - grid spacing for the cubic map
         is_chimeraX_log - should we write logs for ChimeraX scripts
         chimeraX_log_path - path to the folder where ChimeraX's log file will be stored
         (excluding the file's name which will be created automatically)
@@ -208,6 +214,7 @@ def main(
             conformers_kwargs=conformers_kwargs,
             density_resolution=density_resolution,
             n_box=n_box,
+            grid_spacing=grid_spacing,
             is_chimeraX_log=is_chimeraX_log,
             chimeraX_log_path=chimeraX_log_path,
             chimeraX_script_path=chimeraX_script_path,
@@ -295,25 +302,27 @@ if __name__ == "__main__":
             datetime.now(timezone.utc).strftime("%d_%m_%Y_%H.%M.%S.%f")[:-2]
             + "_main_log.txt"
         )
-        main_log_path = os.path.join(os.getcwd(), "main_logs")
+        main_log_path = os.path.join(os.getcwd(), "low_res_maps_main_logs")
         create_folder(main_log_path)
 
     # specify keyword arguments for the main function
     base_ligand_name = "_ligand.pdb"
     base_protein_name = "_protein_processed.pdb"
-    n_confs = 10
+    n_confs = 5
     generation_mode = "gnina_docking"
+    box_extension = 2.5
     conformers_kwargs = {
-        "box_extension": 5.0,
+        "box_extension": box_extension,
         "path_to_gnina": os.path.join(os.getcwd(), "gnina"),
     }
-    density_resolution = 3.5
-    n_box = 16
+    density_resolution = 4.0
+    n_box = 32
+    grid_spacing = 0.5
     chimeraX_script_path = os.path.join(os.getcwd(), "chimeraX_scripts")
-    threshold_correlation = 0.3
+    threshold_correlation = 0.7
     not_found_corr_value = 0.0
     write_corrs_to_file = False
-    delete_prob = 0.2
+    delete_prob = 0.1
     clear_temp = True
     main_kwargs = {
         "base_ligand_name": base_ligand_name,
@@ -323,6 +332,7 @@ if __name__ == "__main__":
         "conformers_kwargs": conformers_kwargs,
         "density_resolution": density_resolution,
         "n_box": n_box,
+        "grid_spacing": grid_spacing,
         "is_chimeraX_log": is_chimeraX_log,
         "chimeraX_log_path": chimeraX_log_path,
         "chimeraX_script_path": chimeraX_script_path,
@@ -342,7 +352,7 @@ if __name__ == "__main__":
         os.path.join(
             db_path,
             complex_name,
-            f"{complex_name}_nconfs{n_confs}_genmode_{generation_mode}_res{density_resolution}_nbox{n_box}_threshcorr{threshold_correlation}_delprob{delete_prob}_low_resolution_forward_model.mrc",
+            f"{complex_name}_nconfs{n_confs}_genmode_{generation_mode}_boxextens{box_extension}_res{density_resolution}_nbox{n_box}_gridspacing{grid_spacing}_threshcorr{threshold_correlation}_delprob{delete_prob}_low_resolution_forward_model.mrc",
         )
         for complex_name in complex_names
     )

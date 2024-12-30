@@ -254,6 +254,7 @@ def filter_docked_poses_by_correlation(
     chimeraX_output_path=os.getcwd() + os.path.sep + "chimeraX_output",
     density_resolution=1.0,
     n_box=16,
+    grid_spacing=0.5,
     is_log=False,
     log_path=os.getcwd() + os.path.sep + "chimeraX_logs",
     script_path=os.getcwd() + os.path.sep + "chimeraX_scripts",
@@ -277,6 +278,7 @@ def filter_docked_poses_by_correlation(
         chimeraX_output_path - path to the folder where output ChimeraX files will be stored
         density_resolution - desired resolution of the maps we generate for the molecules (in Angstrom)
         n_box - number of points for the cubic box
+        grid_spacing - grid spacing for the cubic map
         is_log - should we write logs for ChimeraX scripts
         log_path - path to the folder where the log file will be stored (excluding the file's name which will be created automatically)
         script_path - path to the folder with the python script for ChimeraX (excluding its name)
@@ -315,6 +317,7 @@ def filter_docked_poses_by_correlation(
                 output_file,
                 density_resolution=density_resolution,
                 n_box=n_box,
+                grid_spacing=grid_spacing,
                 is_log=is_log,
                 log_path=log_path,
                 script_path=script_path,
@@ -369,7 +372,8 @@ def main(
     threshold_correlation=0.6,
     not_found_corr_value=0.0,
     density_resolution=1.0,
-    n_box=16,
+    n_box=32,
+    grid_spacing=0.5,
     is_chimeraX_log=True,
     chimeraX_log_path=os.path.join(os.getcwd(), "chimeraX_logs"),
     chimeraX_script_path=os.path.join(os.getcwd(), "chimeraX_scripts"),
@@ -397,6 +401,7 @@ def main(
         not_found_corr_value - the value we use if the correlation for a particular pose wasn't found/computed
         density_resolution - desired resolution of the map (in Angstrom) that we generate for docking poses
         n_box - number of points for the map's cubic box
+        grid_spacing - grid spacing for the cubic map
         is_chimeraX_log - should we write logs for ChimeraX scripts
         chimeraX_log_path - path to the folder where ChimeraX's log file will be stored
         (excluding the file's name which will be created automatically)
@@ -470,6 +475,7 @@ def main(
                 chimeraX_output_path=chimeraX_output_path,
                 density_resolution=density_resolution,
                 n_box=n_box,
+                grid_spacing=grid_spacing,
                 is_log=is_chimeraX_log,
                 log_path=chimeraX_log_path,
                 script_path=chimeraX_script_path,
@@ -592,7 +598,8 @@ if __name__ == '__main__':
     threshold_correlation = 0.6
     not_found_corr_value = 0.0
     density_resolution = 3.5
-    n_box = 16
+    n_box = 32
+    grid_spacing = 0.5
     chimeraX_script_path = os.path.join(os.getcwd(), "chimeraX_scripts")
     clear_chimeraX_output = True
     main_kwargs = {
@@ -610,6 +617,7 @@ if __name__ == '__main__':
         "not_found_corr_value": not_found_corr_value,
         "density_resolution": density_resolution,
         "n_box": n_box,
+        "grid_spacing": grid_spacing,
         "is_chimeraX_log": is_chimeraX_log,
         "chimeraX_log_path": chimeraX_log_path,
         "chimeraX_script_path": chimeraX_script_path,

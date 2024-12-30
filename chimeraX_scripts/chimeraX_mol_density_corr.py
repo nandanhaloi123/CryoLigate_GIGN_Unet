@@ -23,15 +23,17 @@ The script accepts the following input arguments:
 -i: full path to the input molecule file
 -r: resolution for the molecule map generation
 -b: number of points for the cubic map
+-g: grid spacing for the cubic map
 -t: full path to the target density file
 -l: if provided, contains path to the folder where log file will be written
 """
 
-opts, args = getopt.getopt(sys.argv[1:], "i:r:b:t:l:")
+opts, args = getopt.getopt(sys.argv[1:], "i:r:b:g:t:l:")
 
 molecule_path_full = None  # full path to the input molecule file (including its name)
 density_resolution = None  # density map resolution for the molecule (in Angrstrom)
 n_box = None  # number of points for the cubic map
+grid_spacing = None # grid spacing for the cubic map
 target_density_path_full = None  # full path to the target density file
 is_log = False  # whether we should write logs for ChimeraX script
 log_path = None  # path to the log folder (excluding log file name)
@@ -43,6 +45,8 @@ for opt, arg in opts:
         density_resolution = arg
     elif opt == "-b":
         n_box = arg
+    elif opt == "-g":
+        grid_spacing = arg
     elif opt == "-t":
         target_density_path_full = arg
     elif opt == "-l":
@@ -56,6 +60,7 @@ assert (
 
 assert density_resolution, "Density resolution is None after argument's parsing."
 assert n_box, "Number of points for the cubic map is None after argument's parsing."
+assert grid_spacing, "Grid spacing for the cubic map is None after argument's parsing."
 assert (
     target_density_path_full
 ), "Path to the target density file  is None after argument's parsing."
@@ -92,7 +97,7 @@ run_com(
 
 run_com(
     session,
-    "molmap #1 {} cube {} gridSpacing 1.0".format(density_resolution, n_box),
+    "molmap #1 {} cube {} gridSpacing {}".format(density_resolution, n_box, grid_spacing),
     is_log=is_log,
     log_path=log_path,
     log_filename=log_fname,

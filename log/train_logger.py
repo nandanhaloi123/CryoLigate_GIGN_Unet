@@ -20,14 +20,14 @@ class TrainLogger(BasicLogger):
         self.args = args
 
         timestamp = time.strftime("%Y%m%d_%H%M%S")
-        if args.get('mark') == None:
-            savetag = timestamp + '_' + args.get('model') + '_' + 'repeat' + str(args.get('repeat'))
-        else:
-            savetag = timestamp + '_' + args.get('model') + '_' + 'repeat' + str(args.get('repeat')) + '_' + args.get('mark')
+        model_name = args.get("model_name")
+        savetag = model_name + "_" + timestamp
 
         save_dir = args.get('save_dir')
+
         if save_dir == None:
             raise Exception('save_dir can not be None!')
+        
         train_save_dir = os.path.join(save_dir, savetag)
         self.log_dir = os.path.join(train_save_dir, 'log', 'train')
         self.model_dir = os.path.join(train_save_dir, 'model')

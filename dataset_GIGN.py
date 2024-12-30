@@ -143,14 +143,20 @@ def mols2graphs(complex_path, label_path, low_res_density_path, save_path, dis_t
     edge_index_inter = inter_graph(ligand, pocket, dis_threshold=dis_threshold)
 
     # read and normalize label (good resolution) density
+    # label_density = mrcfile.read(label_path)
+    # label_density_normalized = normalize_density(label_density)
+    # y = torch.tensor(label_density_normalized).unsqueeze(0).unsqueeze(0)
+    # NOTE TODO: add normalization back
     label_density = mrcfile.read(label_path)
-    label_density_normalized = normalize_density(label_density)
-    y = torch.tensor(label_density_normalized).unsqueeze(0).unsqueeze(0)
+    y = torch.tensor(label_density).unsqueeze(0).unsqueeze(0)
 
     # read and normalize input (bad resolution) density
+    # low_res_density = mrcfile.read(low_res_density_path)
+    # low_res_density_normalized = normalize_density(low_res_density)
+    # low_res_dens = torch.tensor(low_res_density_normalized).unsqueeze(0).unsqueeze(0)
+    # NOTE TODO: add normalization back
     low_res_density = mrcfile.read(low_res_density_path)
-    low_res_density_normalized = normalize_density(low_res_density)
-    low_res_dens = torch.tensor(low_res_density_normalized).unsqueeze(0).unsqueeze(0)
+    low_res_dens = torch.tensor(low_res_density).unsqueeze(0).unsqueeze(0)
 
     pos = torch.concat([pos_l, pos_p], dim=0)
     split = torch.cat([torch.zeros((atom_num_l, )), torch.ones((atom_num_p,))], dim=0)
@@ -175,6 +181,7 @@ def get_graphs(
     base_corr_check_filename="_corr0.6_passed_complexes.txt",
     base_label_filename="_ligand_res1.0_boxed_16A.mrc",
     base_low_res_density_filename="_nconfs10_genmodedocking_res3.5_nbox16_threshcorr0.3_delprob0.2_low_resolution_forward_model.mrc",
+    clarifying_graph_name="",
     create=False,
     dis_threshold=5,
     is_log=True,
@@ -192,6 +199,8 @@ def get_graphs(
         (used to construct the full name)
         base_label_filename - base name for the file with label (target) density (used to construct the full name)
         base_low_res_density_filename - base name for the file with low resolution density (used to construct the full name)
+        clarifying_graph_name - additional part of the graph name to clarify 
+        (needed because we can generate/have different graphs for the same complex e.g. with different good/bad densities)
         create - whether we should create the graphs
         is_log - whether we should write logs for the function
         log_filename - name of the log file (needed only if is_log==True)
@@ -231,6 +240,7 @@ def get_graphs(
                             corr_check_file_path,
                             label_path,
                             low_res_density_path,
+                            clarifying_graph_name=clarifying_graph_name,
                             dis_threshold=dis_threshold,
                             is_log=is_log,
                             log_filename=log_filename,
@@ -256,6 +266,7 @@ def get_graphs(
                                 ) # path to the complexes passed cross-correlation check
             graphs_found = find_graphs(
                             corr_check_file_path,
+                            clarifying_graph_name=clarifying_graph_name,
                             is_log=is_log,
                             log_filename=log_filename,
                             log_path=log_path,
@@ -275,6 +286,7 @@ def create_graphs(
     corr_check_file_path,
     label_path,
     low_res_density_path,
+    clarifying_graph_name="",
     dis_threshold=5,
     is_log=True,
     log_filename="log.txt",
@@ -287,6 +299,8 @@ def create_graphs(
         corr_check_file_path - full path to the file with path to the complexes that passed cross-correlation check
         label_path - full path to the label (target) density for the complexes
         low_res_density_path - full path to the low resolution density for the complexes
+        clarifying_graph_name - additional part of the graph name to clarify 
+        (needed because we can generate different graphs for the same complex e.g. with different good/bad densities)
         is_log - whether we should write logs for the function
         log_filename - name of the log file (needed only if is_log==True)
         log_path - path to the log file excluding its name (needed only if is_log==True)
@@ -303,7 +317,7 @@ def create_graphs(
         for line in complex_file:
             line = line.strip()
             paths_to_complexes.append(line)
-            graphs_to_create.append(delete_extension_from_filename(line) + ".pyg")
+            graphs_to_create.append(delete_extension_from_filename(line) + clarifying_graph_name + ".pyg")
 
     # create graphs for those complexes
     for i in range(len(paths_to_complexes)):
@@ -339,6 +353,7 @@ def create_graphs(
 
 def find_graphs(    
     corr_check_file_path,
+    clarifying_graph_name="",
     is_log=True,
     log_filename="log.txt",
     log_path=os.path.join(os.getcwd(), "dataset_GIGN_main_logs"),
@@ -348,6 +363,8 @@ def find_graphs(
 
     Args:
         corr_check_file_path - full path to the file with path to the complexes that passed cross-correlation check
+        clarifying_graph_name - additional part of the graph name to clarify 
+        (needed because we can have different graphs for the same complex e.g. with different good/bad densities)
         is_log - whether we should write logs for the function
         log_filename - name of the log file (needed only if is_log==True)
         log_path - path to the log file excluding its name (needed only if is_log==True)
@@ -362,7 +379,7 @@ def find_graphs(
     with open(corr_check_file_path, "r") as complex_file:
         for line in complex_file:
             line = line.strip()
-            graphs_to_find.append(delete_extension_from_filename(line) + ".pyg")
+            graphs_to_find.append(delete_extension_from_filename(line) + clarifying_graph_name + ".pyg")
     #NOTE TODO: remove the thing below, we need all graphs
     graphs_to_find = graphs_to_find[:1]
     # look for graphs for those complexes
@@ -408,6 +425,7 @@ class GraphDataset(Dataset):
         base_corr_check_filename="_corr0.6_passed_complexes.txt",
         base_label_filename="_ligand_res1.0_boxed_16A.mrc",
         base_low_res_density_filename="_nconfs10_genmodedocking_res3.5_nbox16_threshcorr0.3_delprob0.2_low_resolution_forward_model.mrc",
+        clarifying_graph_name="",
         is_log=True,
         log_path=os.path.join(os.getcwd(), "dataset_GIGN_main_logs"),
     ):
@@ -422,6 +440,7 @@ class GraphDataset(Dataset):
         self.base_corr_check_filename = base_corr_check_filename
         self.base_label_filename = base_label_filename
         self.base_low_res_density_filename = base_low_res_density_filename
+        self.clarifying_graph_name = clarifying_graph_name
         self.is_log = is_log
         self.log_path = log_path
         self._pre_process()
@@ -450,6 +469,7 @@ class GraphDataset(Dataset):
             "base_corr_check_filename": self.base_corr_check_filename,
             "base_label_filename": self.base_label_filename,
             "base_low_res_density_filename": self.base_low_res_density_filename,
+            "clarifying_graph_name": self.clarifying_graph_name,
             "create": self.create,
             "dis_threshold": self.dis_threshold,
             "is_log": self.is_log,
@@ -511,9 +531,10 @@ if __name__ == '__main__':
     dis_threshold = 5
     graph_type = 'Graph_GIGN' 
     create = True
-    base_corr_check_filename = "_corr0.6_passed_complexes.txt"
-    base_label_filename = "_ligand_res1.0_boxed_16A.mrc"
-    base_low_res_density_filename = "_nconfs10_genmodedocking_res3.5_nbox16_threshcorr0.3_delprob0.2_low_resolution_forward_model.mrc"
+    base_corr_check_filename = "_complexes_map_less_noisy_bad_to_map2.0.txt"
+    base_label_filename = "_ligand_res_2.0_gridpsace_0.5_nbox_32_size_16A.mrc"
+    base_low_res_density_filename = "_nconfs5_genmode_gnina_docking_boxextens2.5_res4.0_nbox32_gridspacing0.5_threshcorr0.7_delprob0.1_low_resolution_forward_model.mrc"
+    clarifying_graph_name = "_unnormalized_map_less_noisy_bad_to_map2.0"
     is_log = True
     log_path = os.path.join(os.getcwd(), "dataset_GIGN_main_logs")
     dataset = GraphDataset(
@@ -526,10 +547,12 @@ if __name__ == '__main__':
         base_corr_check_filename=base_corr_check_filename,
         base_label_filename=base_label_filename,
         base_low_res_density_filename=base_low_res_density_filename,
+        clarifying_graph_name=clarifying_graph_name,
         is_log=is_log,
         log_path=log_path
     )
 
     print(len(dataset.graph_paths))
     print(len(dataset))
+    print(len(np.unique(dataset.graph_paths)))
     print(dataset.graph_paths)

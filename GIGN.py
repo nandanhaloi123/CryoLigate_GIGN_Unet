@@ -15,11 +15,12 @@ class GIGN(nn.Module):
         self.gconv2 = HIL(hidden_dim, hidden_dim)
         self.gconv3 = HIL(hidden_dim, hidden_dim)
 
-        output_shape = (1, 16, 16, 16)
+        output_shape = (1, 32, 32, 32)
         
         self.MLP1DTo3D = MLP1DTo3D(hidden_dim, output_shape)
-        self.UNet3D = UNet3D(in_channels=1, num_classes=1) #NOTE TODO: change in_channels=2 is use low resolution maps
-        
+        self.UNet3D_low_res_dens = UNet3D(in_channels=1, num_classes=1) # NOTE TODO: add/remove additional Unet for low resolution maps
+        self.UNet3D = UNet3D(in_channels=1, num_classes=1) #NOTE TODO: change in_channels=2 if use low resolution maps
+        self.ReLU = nn.ReLU() # NOTE TODO: add/remove final ReLU
         #self.fc = FC(hidden_dim, hidden_dim, 3, 0.1, 1)
 
     def forward(self, data):
@@ -38,15 +39,24 @@ class GIGN(nn.Module):
         # x = global_add_pool(x, data.batch)
         # # print("After global_add_pool:", x.size())
         # x = self.MLP1DTo3D(x)
-        # print("After MLP1DTo3D:", x.size())
-        # # print("Low res density size: ", low_res_dens.size())
+        # # print("After MLP1DTo3D:", x.size())
+
+        # # NOTE TODO: add/remove additional Unet for low resolution maps
+        # low_res_dens_after_unet = self.UNet3D_low_res_dens(low_res_dens)
+        # print("Low res dens after Unet:", low_res_dens_after_unet.size())
+
         # # NOTE TODO: return concatenation
-        # x = torch.concat((x, low_res_dens), dim=1)
+        # x = torch.concat((x, low_res_dens_after_unet), dim=1)
         # print("After concat with low res density:", x.size())
+
         # NOTE TODO: return Unet3D
         x = self.UNet3D(low_res_dens)
         # print("After UNet3D:", x.size())
         
+        # # NOTE TODO: add/remove final RelU
+        # x = self.ReLU(x)
+        # print("After final ReLU:", x.size())
+
         # x = self.fc(x)
         # print("After FC:", x.size())
         return x
@@ -59,6 +69,7 @@ class MLP1DTo3D(nn.Module):
         self.output_shape = output_shape  # Shape you want to reshape to (A, B, C)
         
         level_channels=[256, 256*16, 256*32] 
+        # level_channels=[256*2, 256*16, 256*32] # NOTE TODO: change levels here
         hidden_size_1, hidden_size_2, hidden_size_3 = level_channels[0], level_channels[1], level_channels[2]
         # Define the MLP layers
         self.fc1 = nn.Linear(input_size, hidden_size_1)

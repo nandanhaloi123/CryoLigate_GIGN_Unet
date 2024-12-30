@@ -267,6 +267,7 @@ def compute_density_map_in_chimeraX(
     density_path_full,
     density_resolution=1.0,
     n_box=16,
+    grid_spacing=0.5,
     is_log=False,
     log_path=os.getcwd() + os.path.sep + "chimeraX_logs",
     script_path=os.getcwd() + os.path.sep + "chimeraX_scripts",
@@ -282,6 +283,7 @@ def compute_density_map_in_chimeraX(
         density_path_full - full path to the output density file (including its name)
         density_resolution - desired resolution of the map (in Angstrom)
         n_box - number of points for the cubic box
+        grid_spacing - grid spacing for the cubic map
         is_log - should we write logs for ChimeraX scripts
         log_path - path to the folder where the log file will be stored (excluding the file's name which will be created automatically)
         script_path - path to the folder with the python script for ChimeraX (excluding its name)
@@ -294,8 +296,8 @@ def compute_density_map_in_chimeraX(
     scipt_name = "chimeraX_density_map.py"
 
     # options for the python script
-    option_names = ["-i", "-r", "-b", "-o"]
-    option_values = [molecule_path_full, density_resolution, n_box, density_path_full]
+    option_names = ["-i", "-r", "-b", "-g", "-o"]
+    option_values = [molecule_path_full, density_resolution, n_box, grid_spacing, density_path_full]
     if is_log:
         option_names.append("-l")
         option_values.append(log_path)
@@ -366,6 +368,7 @@ def compute_mol_map_correlation_in_chimeraX(
     output_file,
     density_resolution=1.0,
     n_box=16,
+    grid_spacing=0.5,
     is_log=False,
     log_path=os.getcwd() + os.path.sep + "chimeraX_logs",
     script_path=os.getcwd() + os.path.sep + "chimeraX_scripts",
@@ -382,6 +385,7 @@ def compute_mol_map_correlation_in_chimeraX(
         file since the correlation will be written there
         density_resolution - desired resolution of the map we generate for the molecule (in Angstrom)
         n_box - number of points for the cubic box
+        grid_spacing - grid spacing for the cubic map
         is_log - whether we should write logs for ChimeraX scripts
         log_path - path to the folder where the log file will be stored (excluding the file's name which will be created automatically)
         script_path - path to the folder with the python script for ChimeraX (excluding its name)
@@ -394,8 +398,8 @@ def compute_mol_map_correlation_in_chimeraX(
     scipt_name = "chimeraX_mol_density_corr.py"
 
     # options for the python script
-    option_names = ["-i", "-r", "-b", "-t"]
-    option_values = [molecule_path_full, density_resolution, n_box, target_density_path_full]
+    option_names = ["-i", "-r", "-b", "-g", "-t"]
+    option_values = [molecule_path_full, density_resolution, n_box, grid_spacing, target_density_path_full]
     if is_log:
         option_names.append("-l")
         option_values.append(log_path)

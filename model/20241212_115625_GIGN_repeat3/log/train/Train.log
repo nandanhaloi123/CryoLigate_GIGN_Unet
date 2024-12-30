@@ -1,5 +1,0 @@
-2024-12-12 11:56:25 - INFO - /mnt/cephfs/projects/2023110101_Ligand_fitting_to_EM_maps/My_Code/CryoLigate_Github/CryoLigate/GIGN/GIGN_EM/For_Elisei_Nov_2024/CryoLigate_GIGN_Unet/train_example.py
-2024-12-12 11:56:25 - INFO - train data: 37
-2024-12-12 11:56:25 - INFO - valid data: 7
-2024-12-12 11:56:26 - INFO - epoch-0, train_loss-1.0479, valid_loss-0.6863
-2024-12-12 11:56:26 - INFO - epoch-1, train_loss-0.7105, valid_loss-0.6868
