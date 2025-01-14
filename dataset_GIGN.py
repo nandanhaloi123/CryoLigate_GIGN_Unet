@@ -100,7 +100,7 @@ def inter_graph(ligand, pocket, dis_threshold = 5.):
 
     return edge_index_inter
 
-def normalize_density(density):
+def normalize_density_minmax(density):
     """
     Normalizes given density array:
     1) Replaces all negative elements with zero
@@ -123,6 +123,58 @@ def normalize_density(density):
 
     return density_normalized
 
+def find_top_density(density, percentile):
+    """
+    Finds top percentile for the given density array.
+
+    Args:
+        density - array with density values
+        percentile - percentile value between 0 and 1
+
+    Returns:
+        density value corresponding the percentile
+    """
+    use_density = density[density > 0]
+
+    hist, bin_edges = np.histogram(use_density, bins=200)
+
+    log_hist = [np.log(x) if x > 0 else 0 for x in hist]
+    sum_cutoff = np.sum(log_hist) * percentile
+    cumulative = 0
+    for j in range(len(log_hist)):
+        cumulative += log_hist[j]
+        if cumulative > sum_cutoff:
+            return bin_edges[j]
+        
+    return bin_edges[-1]
+
+def normalize_density_with_percentile(density, percentile=0.99):
+    """
+    Normalizes given density array:
+    1) Replaces all negative elements with zero
+    2) Find density value corresponding to the given percentile and set is as a max value
+    3) Applies min-max normalization
+
+    Args:
+        density - array with density values
+        percentile - percentile value between 0 and 1
+
+    Returns:
+        density_normalized - array with normalized density values
+    """
+    # replace all negative elements with zero
+    density[density < 0] = 0
+
+    # find percentile density value and set is a max value
+    percentile_density_value = find_top_density(density, percentile)
+    density[density > percentile_density_value] = percentile_density_value
+
+    # apply min-max normalization
+    min_value = np.min(density)
+    max_value = np.max(density)
+    density_normalized = (density - min_value) / (max_value - min_value)
+
+    return density_normalized
 
 
 # %%
@@ -143,20 +195,26 @@ def mols2graphs(complex_path, label_path, low_res_density_path, save_path, dis_t
     edge_index_inter = inter_graph(ligand, pocket, dis_threshold=dis_threshold)
 
     # read and normalize label (good resolution) density
-    # label_density = mrcfile.read(label_path)
-    # label_density_normalized = normalize_density(label_density)
-    # y = torch.tensor(label_density_normalized).unsqueeze(0).unsqueeze(0)
-    # NOTE TODO: add normalization back
+    # NOTE TODO: change normalizations
     label_density = mrcfile.read(label_path)
-    y = torch.tensor(label_density).unsqueeze(0).unsqueeze(0)
+    label_density_normalized = normalize_density_minmax(label_density)
+    # label_density_normalized = normalize_density_with_percentile(label_density, percentile=0.99)
+    y = torch.tensor(label_density_normalized).unsqueeze(0).unsqueeze(0)
+
+    # # NOTE TODO: add normalization back
+    # label_density = mrcfile.read(label_path)
+    # y = torch.tensor(label_density).unsqueeze(0).unsqueeze(0)
 
     # read and normalize input (bad resolution) density
-    # low_res_density = mrcfile.read(low_res_density_path)
-    # low_res_density_normalized = normalize_density(low_res_density)
-    # low_res_dens = torch.tensor(low_res_density_normalized).unsqueeze(0).unsqueeze(0)
-    # NOTE TODO: add normalization back
+    # NOTE TODO: change normalizations
     low_res_density = mrcfile.read(low_res_density_path)
-    low_res_dens = torch.tensor(low_res_density).unsqueeze(0).unsqueeze(0)
+    low_res_density_normalized = normalize_density_minmax(low_res_density)
+    # low_res_density_normalized = normalize_density_with_percentile(low_res_density, percentile=0.99)
+    low_res_dens = torch.tensor(low_res_density_normalized).unsqueeze(0).unsqueeze(0)
+
+    # # NOTE TODO: add normalization back
+    # low_res_density = mrcfile.read(low_res_density_path)
+    # low_res_dens = torch.tensor(low_res_density).unsqueeze(0).unsqueeze(0)
 
     pos = torch.concat([pos_l, pos_p], dim=0)
     split = torch.cat([torch.zeros((atom_num_l, )), torch.ones((atom_num_p,))], dim=0)
@@ -509,20 +567,22 @@ if __name__ == '__main__':
     assert num_process is not None, "Number of processes is None after arugment's parsing"
 
     # path to the database
-    data_dir = os.path.sep + os.path.sep.join(
-        [
-            "mnt",
-            "cephfs",
-            "projects",
-            "2023110101_Ligand_fitting_to_EM_maps",
-            "PDBbind",
-            "PDBBind_Zenodo_6408497",
-        ]
-    )
+    # data_dir = os.path.sep + os.path.sep.join(
+    #     [
+    #         "mnt",
+    #         "cephfs",
+    #         "projects",
+    #         "2023110101_Ligand_fitting_to_EM_maps",
+    #         "PDBbind",
+    #         "PDBBind_Zenodo_6408497",
+    #     ]
+    # )
+
+    data_dir = '/proj/berzelius-2022-haloi/users/x_elima/PDBBind_Zenodo_6408497'
 
     # load molecule names
     complex_names_csv = (
-        data_dir + os.path.sep + "PDB_IDs_with_rdkit_length_less_than_16A_succ_gnina.csv"
+        data_dir + os.path.sep + "PDB_IDs_with_rdkit_length_less_than_24A.csv"
     )
     data_df = pd.read_csv(complex_names_csv)
     # data_df = data_df.iloc[:5]
@@ -531,10 +591,10 @@ if __name__ == '__main__':
     dis_threshold = 5
     graph_type = 'Graph_GIGN' 
     create = True
-    base_corr_check_filename = "_complexes_map_less_noisy_bad_to_map2.0.txt"
-    base_label_filename = "_ligand_res_2.0_gridpsace_0.5_nbox_32_size_16A.mrc"
-    base_low_res_density_filename = "_nconfs5_genmode_gnina_docking_boxextens2.5_res4.0_nbox32_gridspacing0.5_threshcorr0.7_delprob0.1_low_resolution_forward_model.mrc"
-    clarifying_graph_name = "_unnormalized_map_less_noisy_bad_to_map2.0"
+    base_corr_check_filename = "_complexes_temporary_bad_maps_only.txt"
+    base_label_filename = "_ligand_res_2.0_gridpsace_0.5_nbox_48_size_24A_label.mrc"
+    base_low_res_density_filename = "_nconfs3_genmode_gnina_docking_boxextens1.0_res4.0_delprob0.0_low_resolution_forward_model.mrc"
+    clarifying_graph_name = "_forward_model_bad_nconfs3_to_good_res2.0_norm_minmax"
     is_log = True
     log_path = os.path.join(os.getcwd(), "dataset_GIGN_main_logs")
     dataset = GraphDataset(

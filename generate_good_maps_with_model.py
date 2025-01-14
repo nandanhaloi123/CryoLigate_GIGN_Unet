@@ -21,28 +21,31 @@ import mrcfile
 
 
 if __name__ == "__main__":
-    data_root = '/mnt/cephfs/projects/2023110101_Ligand_fitting_to_EM_maps/PDBbind'
+    data_root = '/proj/berzelius-2022-haloi/users/x_elima'
 
     toy_dir = os.path.join(data_root, 'PDBBind_Zenodo_6408497')
 
 
-    model_name = "new_label_unet_only_unnormalized_without_final_ReLU_bad_less_noisy_forward_to_2.0"
+    epoch = 60
+
+    model_name = f"L2_with_ReLU_epoch{epoch}"
     model_path = os.path.join(
-        os.getcwd(),
-        "model",
-        "only_final_unet_without_final_ReLU_unnorm_maps_less_noisy_bad_forward_to_2.0_batchsize_16_hidsize_256_levels_256_lr_5e-4_wd_1e-6_20241229_124740",
-        "model",
-        "model.pkl"
-        )   
+            os.getcwd(),
+            "model",
+            "only_final_unet_with_final_ReLU_L2loss_norm_minmax_maps_forward_model_bad_nconfs3_to_good_res2.0_batchsize_64_hidsize_256_levels_256_lr_5e-4_wd_1e-5_20250103_170201",
+            "model",
+            f"model_{epoch}.pkl"
+            )  
+
     
     ###################################
-    toy_df = pd.read_csv(os.path.join(toy_dir, "PDB_IDs_with_rdkit_length_less_than_16A_succ_gnina.csv")).sample(frac=1., random_state=123)
+    toy_df = pd.read_csv(os.path.join(toy_dir, "PDB_IDs_with_rdkit_length_less_than_24A.csv")).sample(frac=1., random_state=123)
     split_idx = int(0.9 * len(toy_df))
     train_df = toy_df.iloc[:split_idx]
     valid_df = toy_df.iloc[split_idx:]
 
-    train_complex_id = 11
-    val_complex_id = 11
+    train_complex_id = 255
+    val_complex_id = 255
     train_df = train_df.iloc[train_complex_id: train_complex_id + 1]
     valid_df = valid_df.iloc[val_complex_id: val_complex_id + 1]
 
@@ -59,10 +62,10 @@ if __name__ == "__main__":
     create_dataset = False
     # base_corr_check_filename = "_Nandan_graphs_with_bad_maps.txt"
     # base_corr_check_filename = "_corr0.6_passed_complexes.txt"
-    base_corr_check_filename = "_complexes_map_less_noisy_bad_to_map2.0.txt"
-    base_label_filename = "_ligand_res_2.0_gridpsace_0.5_nbox_32_size_16A.mrc"
-    base_low_res_density_filename = "_nconfs5_genmode_gnina_docking_boxextens2.5_res4.0_nbox32_gridspacing0.5_threshcorr0.7_delprob0.1_low_resolution_forward_model.mrc"
-    clarifying_graph_name = "_unnormalized_map_less_noisy_bad_to_map2.0"
+    base_corr_check_filename = "_complexes_temporary_bad_maps_only.txt"
+    base_label_filename = "_ligand_res_2.0_gridpsace_0.5_nbox_48_size_24A_label.mrc"
+    base_low_res_density_filename = "_nconfs3_genmode_gnina_docking_boxextens1.0_res4.0_delprob0.0_low_resolution_forward_model.mrc"
+    clarifying_graph_name = "_forward_model_bad_nconfs3_to_good_res2.0_norm_minmax"
     is_dataset_log = True
     dataset_log_path = os.path.join(os.getcwd(), "dataset_GIGN_main_logs")
 
@@ -131,8 +134,8 @@ if __name__ == "__main__":
             low_res_voxel_size = low_res_dens_file.voxel_size
 
         generated_map_path = os.path.join(
-                        toy_dir,
-                        complex_name_train,
+                        os.getcwd(),
+                        "maps_generated_with_model",
                         complex_name_train + "_train_" + model_name + "_generated_map.mrc"
                         )
         
@@ -170,8 +173,8 @@ if __name__ == "__main__":
             low_res_voxel_size = low_res_dens_file.voxel_size
 
         generated_map_path = os.path.join(
-                        toy_dir,
-                        complex_name_val,
+                        os.getcwd(),
+                        "maps_generated_with_model",
                         complex_name_val + "_val_" + model_name + "_generated_map.mrc"
                         )
         

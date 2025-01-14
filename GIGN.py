@@ -15,7 +15,7 @@ class GIGN(nn.Module):
         self.gconv2 = HIL(hidden_dim, hidden_dim)
         self.gconv3 = HIL(hidden_dim, hidden_dim)
 
-        output_shape = (1, 32, 32, 32)
+        output_shape = (1, 48, 48, 48)
         
         self.MLP1DTo3D = MLP1DTo3D(hidden_dim, output_shape)
         self.UNet3D_low_res_dens = UNet3D(in_channels=1, num_classes=1) # NOTE TODO: add/remove additional Unet for low resolution maps
@@ -24,11 +24,14 @@ class GIGN(nn.Module):
         #self.fc = FC(hidden_dim, hidden_dim, 3, 0.1, 1)
 
     def forward(self, data):
-        #NOTE TODO: return low_res_dens
-        x, edge_index_intra, edge_index_inter, pos, low_res_dens = \
-        data.x, data.edge_index_intra, data.edge_index_inter, data.pos, data.low_res_dens
+        # #NOTE TODO: return low_res_dens
+        # x, edge_index_intra, edge_index_inter, pos, low_res_dens = \
+        # data.x, data.edge_index_intra, data.edge_index_inter, data.pos, data.low_res_dens
         # x, edge_index_intra, edge_index_inter, pos = \
         # data.x, data.edge_index_intra, data.edge_index_inter, data.pos
+        
+        #NOTE TODO: return read of all data
+        low_res_dens = data.low_res_dens
 
         # # NOTE TODO: return Graph NN
         # x = self.lin_node(x)
@@ -53,8 +56,8 @@ class GIGN(nn.Module):
         x = self.UNet3D(low_res_dens)
         # print("After UNet3D:", x.size())
         
-        # # NOTE TODO: add/remove final RelU
-        # x = self.ReLU(x)
+        # NOTE TODO: add/remove final RelU
+        x = self.ReLU(x)
         # print("After final ReLU:", x.size())
 
         # x = self.fc(x)

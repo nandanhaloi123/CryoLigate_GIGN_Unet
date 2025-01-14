@@ -1,0 +1,345 @@
+2025-01-06 16:12:53 - INFO - /proj/berzelius-2022-haloi/users/x_elima/CryoLigate_GIGN_Unet/train_example_berzilius.py
+2025-01-06 16:12:53 - INFO - train data: 16027
+2025-01-06 16:12:53 - INFO - train unqiue data: 16027
+2025-01-06 16:12:53 - INFO - valid data: 1781
+2025-01-06 16:12:53 - INFO - valid unqiue data: 1781
+2025-01-06 16:19:53 - INFO - epoch-0, train_loss-0.0007049, val_loss-0.0006763
+2025-01-06 16:26:48 - INFO - epoch-1, train_loss-0.0006745, val_loss-0.0006763
+2025-01-06 16:33:44 - INFO - epoch-2, train_loss-0.0006745, val_loss-0.0006763
+2025-01-06 16:33:46 - INFO - Saved new best model at epoch 2 with validation loss 0.0006763
+2025-01-06 16:40:41 - INFO - epoch-3, train_loss-0.0006745, val_loss-0.0006763
+2025-01-06 16:47:37 - INFO - epoch-4, train_loss-0.0006745, val_loss-0.0006763
+2025-01-06 16:54:32 - INFO - epoch-5, train_loss-0.0006745, val_loss-0.0006763
+2025-01-06 17:01:27 - INFO - epoch-6, train_loss-0.0006745, val_loss-0.0006763
+2025-01-06 17:08:24 - INFO - epoch-7, train_loss-0.0006745, val_loss-0.0006763
+2025-01-06 17:15:20 - INFO - epoch-8, train_loss-0.0006745, val_loss-0.0006763
+2025-01-06 17:22:17 - INFO - epoch-9, train_loss-0.0006745, val_loss-0.0006763
+2025-01-06 17:29:13 - INFO - epoch-10, train_loss-0.0006745, val_loss-0.0006764
+2025-01-06 17:36:09 - INFO - epoch-11, train_loss-0.0006745, val_loss-0.0006766
+2025-01-06 17:43:04 - INFO - epoch-12, train_loss-0.0007125, val_loss-0.0006763
+2025-01-06 17:49:59 - INFO - epoch-13, train_loss-0.0006745, val_loss-0.0006763
+2025-01-06 17:56:53 - INFO - epoch-14, train_loss-0.0006745, val_loss-0.0006763
+2025-01-06 18:03:48 - INFO - epoch-15, train_loss-0.0006745, val_loss-0.0006763
+2025-01-06 18:10:45 - INFO - epoch-16, train_loss-0.0006745, val_loss-0.0006763
+2025-01-06 18:17:41 - INFO - epoch-17, train_loss-0.0006745, val_loss-0.0006763
+2025-01-06 18:24:37 - INFO - epoch-18, train_loss-0.0006745, val_loss-0.0006763
+2025-01-06 18:31:31 - INFO - epoch-19, train_loss-0.0006745, val_loss-0.0006763
+2025-01-06 18:38:25 - INFO - epoch-20, train_loss-0.0006745, val_loss-0.0006763
+2025-01-06 18:45:20 - INFO - epoch-21, train_loss-0.0006745, val_loss-0.0006763
+2025-01-06 18:52:15 - INFO - epoch-22, train_loss-0.0006745, val_loss-0.0006763
+2025-01-06 18:59:09 - INFO - epoch-23, train_loss-0.0006745, val_loss-0.0006763
+2025-01-06 19:06:03 - INFO - epoch-24, train_loss-0.0006745, val_loss-0.0006763
+2025-01-06 19:12:57 - INFO - epoch-25, train_loss-0.0006745, val_loss-0.0006763
+2025-01-06 19:19:53 - INFO - epoch-26, train_loss-0.0006745, val_loss-0.0006763
+2025-01-06 19:26:47 - INFO - epoch-27, train_loss-0.0006745, val_loss-0.0006763
+2025-01-06 19:33:44 - INFO - epoch-28, train_loss-0.0006745, val_loss-0.0006763
+2025-01-06 19:40:37 - INFO - epoch-29, train_loss-0.0006745, val_loss-0.0006763
+2025-01-06 19:47:32 - INFO - epoch-30, train_loss-0.0006745, val_loss-0.0006763
+2025-01-06 19:54:25 - INFO - epoch-31, train_loss-0.0006745, val_loss-0.0006763
+2025-01-06 20:01:20 - INFO - epoch-32, train_loss-0.0006749, val_loss-0.0006763
+2025-01-06 20:08:14 - INFO - epoch-33, train_loss-0.0006745, val_loss-0.0006763
+2025-01-06 20:15:08 - INFO - epoch-34, train_loss-0.0006745, val_loss-0.0006763
+2025-01-06 20:22:01 - INFO - epoch-35, train_loss-0.0006745, val_loss-0.0006763
+2025-01-06 20:28:55 - INFO - epoch-36, train_loss-0.0006745, val_loss-0.0006763
+2025-01-06 20:35:49 - INFO - epoch-37, train_loss-0.0006745, val_loss-0.0006763
+2025-01-06 20:42:43 - INFO - epoch-38, train_loss-0.0006745, val_loss-0.0006763
+2025-01-06 20:49:36 - INFO - epoch-39, train_loss-0.0006745, val_loss-0.0006763
+2025-01-06 20:56:31 - INFO - epoch-40, train_loss-0.0006745, val_loss-0.0006763
+2025-01-06 21:03:24 - INFO - epoch-41, train_loss-0.0006302, val_loss-0.0006679
+2025-01-06 21:03:27 - INFO - Saved new best model at epoch 41 with validation loss 0.0006679
+2025-01-06 21:10:21 - INFO - epoch-42, train_loss-0.0004264, val_loss-0.0005717
+2025-01-06 21:10:23 - INFO - Saved new best model at epoch 42 with validation loss 0.0005717
+2025-01-06 21:17:17 - INFO - epoch-43, train_loss-0.0004191, val_loss-0.0006152
+2025-01-06 21:24:11 - INFO - epoch-44, train_loss-0.0004173, val_loss-0.0006094
+2025-01-06 21:31:06 - INFO - epoch-45, train_loss-0.0004166, val_loss-0.0006123
+2025-01-06 21:38:00 - INFO - epoch-46, train_loss-0.0004157, val_loss-0.0006079
+2025-01-06 21:44:57 - INFO - epoch-47, train_loss-0.0004150, val_loss-0.0006067
+2025-01-06 21:51:51 - INFO - epoch-48, train_loss-0.0004144, val_loss-0.0006007
+2025-01-06 21:58:45 - INFO - epoch-49, train_loss-0.0004139, val_loss-0.0005985
+2025-01-06 22:05:41 - INFO - epoch-50, train_loss-0.0004137, val_loss-0.0006049
+2025-01-06 22:12:36 - INFO - epoch-51, train_loss-0.0004133, val_loss-0.0006055
+2025-01-06 22:19:30 - INFO - epoch-52, train_loss-0.0004130, val_loss-0.0006040
+2025-01-06 22:26:26 - INFO - epoch-53, train_loss-0.0004128, val_loss-0.0006014
+2025-01-06 22:33:20 - INFO - epoch-54, train_loss-0.0004125, val_loss-0.0005959
+2025-01-06 22:40:14 - INFO - epoch-55, train_loss-0.0004122, val_loss-0.0005834
+2025-01-06 22:47:09 - INFO - epoch-56, train_loss-0.0004122, val_loss-0.0005814
+2025-01-06 22:54:03 - INFO - epoch-57, train_loss-0.0004120, val_loss-0.0005880
+2025-01-06 23:01:01 - INFO - epoch-58, train_loss-0.0004117, val_loss-0.0005868
+2025-01-06 23:07:56 - INFO - epoch-59, train_loss-0.0004114, val_loss-0.0005845
+2025-01-06 23:14:50 - INFO - epoch-60, train_loss-0.0004113, val_loss-0.0005824
+2025-01-06 23:21:43 - INFO - epoch-61, train_loss-0.0004108, val_loss-0.0005829
+2025-01-06 23:28:36 - INFO - epoch-62, train_loss-0.0004106, val_loss-0.0005921
+2025-01-06 23:35:31 - INFO - epoch-63, train_loss-0.0004104, val_loss-0.0005876
+2025-01-06 23:42:25 - INFO - epoch-64, train_loss-0.0004102, val_loss-0.0005961
+2025-01-06 23:49:18 - INFO - epoch-65, train_loss-0.0004101, val_loss-0.0005880
+2025-01-06 23:56:13 - INFO - epoch-66, train_loss-0.0004098, val_loss-0.0005909
+2025-01-07 00:03:07 - INFO - epoch-67, train_loss-0.0004097, val_loss-0.0005993
+2025-01-07 00:10:01 - INFO - epoch-68, train_loss-0.0004096, val_loss-0.0005982
+2025-01-07 00:16:54 - INFO - epoch-69, train_loss-0.0004095, val_loss-0.0006023
+2025-01-07 00:23:49 - INFO - epoch-70, train_loss-0.0004094, val_loss-0.0005949
+2025-01-07 00:30:42 - INFO - epoch-71, train_loss-0.0004093, val_loss-0.0005980
+2025-01-07 00:37:36 - INFO - epoch-72, train_loss-0.0004096, val_loss-0.0005975
+2025-01-07 00:44:29 - INFO - epoch-73, train_loss-0.0004095, val_loss-0.0005934
+2025-01-07 00:51:26 - INFO - epoch-74, train_loss-0.0004095, val_loss-0.0005814
+2025-01-07 00:58:21 - INFO - epoch-75, train_loss-0.0004092, val_loss-0.0005852
+2025-01-07 01:05:15 - INFO - epoch-76, train_loss-0.0004093, val_loss-0.0005901
+2025-01-07 01:12:09 - INFO - epoch-77, train_loss-0.0004093, val_loss-0.0005895
+2025-01-07 01:19:04 - INFO - epoch-78, train_loss-0.0004092, val_loss-0.0005859
+2025-01-07 01:25:57 - INFO - epoch-79, train_loss-0.0004092, val_loss-0.0005879
+2025-01-07 01:32:50 - INFO - epoch-80, train_loss-0.0004091, val_loss-0.0005827
+2025-01-07 01:39:44 - INFO - epoch-81, train_loss-0.0004092, val_loss-0.0005757
+2025-01-07 01:46:36 - INFO - epoch-82, train_loss-0.0004091, val_loss-0.0005796
+2025-01-07 01:53:30 - INFO - epoch-83, train_loss-0.0004091, val_loss-0.0005759
+2025-01-07 02:00:24 - INFO - epoch-84, train_loss-0.0004091, val_loss-0.0005756
+2025-01-07 02:07:18 - INFO - epoch-85, train_loss-0.0004091, val_loss-0.0005746
+2025-01-07 02:14:12 - INFO - epoch-86, train_loss-0.0004090, val_loss-0.0005698
+2025-01-07 02:14:18 - INFO - Saved new best model at epoch 86 with validation loss 0.0005698
+2025-01-07 02:21:12 - INFO - epoch-87, train_loss-0.0004090, val_loss-0.0005618
+2025-01-07 02:21:20 - INFO - Saved new best model at epoch 87 with validation loss 0.0005618
+2025-01-07 02:28:13 - INFO - epoch-88, train_loss-0.0004090, val_loss-0.0005654
+2025-01-07 02:35:07 - INFO - epoch-89, train_loss-0.0004090, val_loss-0.0005614
+2025-01-07 02:35:19 - INFO - Saved new best model at epoch 89 with validation loss 0.0005614
+2025-01-07 02:42:13 - INFO - epoch-90, train_loss-0.0004089, val_loss-0.0005557
+2025-01-07 02:42:15 - INFO - Saved new best model at epoch 90 with validation loss 0.0005557
+2025-01-07 02:49:09 - INFO - epoch-91, train_loss-0.0004088, val_loss-0.0005625
+2025-01-07 02:56:03 - INFO - epoch-92, train_loss-0.0004088, val_loss-0.0005596
+2025-01-07 03:02:56 - INFO - epoch-93, train_loss-0.0004088, val_loss-0.0005455
+2025-01-07 03:03:02 - INFO - Saved new best model at epoch 93 with validation loss 0.0005455
+2025-01-07 03:09:57 - INFO - epoch-94, train_loss-0.0004087, val_loss-0.0005447
+2025-01-07 03:09:59 - INFO - Saved new best model at epoch 94 with validation loss 0.0005447
+2025-01-07 03:16:55 - INFO - epoch-95, train_loss-0.0004087, val_loss-0.0005466
+2025-01-07 03:23:48 - INFO - epoch-96, train_loss-0.0004087, val_loss-0.0005466
+2025-01-07 03:30:42 - INFO - epoch-97, train_loss-0.0004087, val_loss-0.0005464
+2025-01-07 03:37:36 - INFO - epoch-98, train_loss-0.0004087, val_loss-0.0005489
+2025-01-07 03:44:30 - INFO - epoch-99, train_loss-0.0004087, val_loss-0.0005585
+2025-01-07 03:51:24 - INFO - epoch-100, train_loss-0.0004087, val_loss-0.0005836
+2025-01-07 03:58:18 - INFO - epoch-101, train_loss-0.0004086, val_loss-0.0005967
+2025-01-07 04:05:18 - INFO - epoch-102, train_loss-0.0004086, val_loss-0.0005924
+2025-01-07 04:12:11 - INFO - epoch-103, train_loss-0.0004086, val_loss-0.0005905
+2025-01-07 04:19:05 - INFO - epoch-104, train_loss-0.0004085, val_loss-0.0005834
+2025-01-07 04:26:01 - INFO - epoch-105, train_loss-0.0004085, val_loss-0.0005824
+2025-01-07 04:32:56 - INFO - epoch-106, train_loss-0.0004085, val_loss-0.0005793
+2025-01-07 04:39:50 - INFO - epoch-107, train_loss-0.0004085, val_loss-0.0005842
+2025-01-07 04:46:43 - INFO - epoch-108, train_loss-0.0004085, val_loss-0.0005820
+2025-01-07 04:53:37 - INFO - epoch-109, train_loss-0.0004085, val_loss-0.0005813
+2025-01-07 05:00:31 - INFO - epoch-110, train_loss-0.0004085, val_loss-0.0005785
+2025-01-07 05:07:27 - INFO - epoch-111, train_loss-0.0004085, val_loss-0.0005782
+2025-01-07 05:14:20 - INFO - epoch-112, train_loss-0.0004085, val_loss-0.0005793
+2025-01-07 05:21:14 - INFO - epoch-113, train_loss-0.0004085, val_loss-0.0005817
+2025-01-07 05:28:10 - INFO - epoch-114, train_loss-0.0004085, val_loss-0.0005848
+2025-01-07 05:35:05 - INFO - epoch-115, train_loss-0.0004085, val_loss-0.0005860
+2025-01-07 05:41:58 - INFO - epoch-116, train_loss-0.0004085, val_loss-0.0005792
+2025-01-07 05:48:51 - INFO - epoch-117, train_loss-0.0004085, val_loss-0.0005907
+2025-01-07 05:55:44 - INFO - epoch-118, train_loss-0.0004085, val_loss-0.0005900
+2025-01-07 06:02:38 - INFO - epoch-119, train_loss-0.0004085, val_loss-0.0005893
+2025-01-07 06:09:32 - INFO - epoch-120, train_loss-0.0004085, val_loss-0.0005897
+2025-01-07 06:16:26 - INFO - epoch-121, train_loss-0.0004084, val_loss-0.0005875
+2025-01-07 06:23:19 - INFO - epoch-122, train_loss-0.0004084, val_loss-0.0005869
+2025-01-07 06:30:13 - INFO - epoch-123, train_loss-0.0004084, val_loss-0.0005859
+2025-01-07 06:37:08 - INFO - epoch-124, train_loss-0.0004084, val_loss-0.0005865
+2025-01-07 06:44:02 - INFO - epoch-125, train_loss-0.0004084, val_loss-0.0005834
+2025-01-07 06:50:57 - INFO - epoch-126, train_loss-0.0004084, val_loss-0.0005817
+2025-01-07 06:57:51 - INFO - epoch-127, train_loss-0.0004084, val_loss-0.0005813
+2025-01-07 07:04:44 - INFO - epoch-128, train_loss-0.0004084, val_loss-0.0005804
+2025-01-07 07:11:37 - INFO - epoch-129, train_loss-0.0004084, val_loss-0.0005776
+2025-01-07 07:18:33 - INFO - epoch-130, train_loss-0.0004084, val_loss-0.0005763
+2025-01-07 07:25:27 - INFO - epoch-131, train_loss-0.0004084, val_loss-0.0005775
+2025-01-07 07:32:23 - INFO - epoch-132, train_loss-0.0004084, val_loss-0.0005758
+2025-01-07 07:39:18 - INFO - epoch-133, train_loss-0.0004084, val_loss-0.0005737
+2025-01-07 07:46:12 - INFO - epoch-134, train_loss-0.0004084, val_loss-0.0005742
+2025-01-07 07:53:06 - INFO - epoch-135, train_loss-0.0004084, val_loss-0.0005730
+2025-01-07 07:59:59 - INFO - epoch-136, train_loss-0.0004084, val_loss-0.0005707
+2025-01-07 08:06:52 - INFO - epoch-137, train_loss-0.0004084, val_loss-0.0005702
+2025-01-07 08:13:45 - INFO - epoch-138, train_loss-0.0004084, val_loss-0.0005663
+2025-01-07 08:20:37 - INFO - epoch-139, train_loss-0.0004084, val_loss-0.0005642
+2025-01-07 08:27:30 - INFO - epoch-140, train_loss-0.0004084, val_loss-0.0005614
+2025-01-07 08:34:24 - INFO - epoch-141, train_loss-0.0004084, val_loss-0.0005596
+2025-01-07 08:41:18 - INFO - epoch-142, train_loss-0.0004084, val_loss-0.0005543
+2025-01-07 08:48:12 - INFO - epoch-143, train_loss-0.0004084, val_loss-0.0005456
+2025-01-07 08:55:05 - INFO - epoch-144, train_loss-0.0004084, val_loss-0.0005435
+2025-01-07 08:55:08 - INFO - Saved new best model at epoch 144 with validation loss 0.0005435
+2025-01-07 09:02:02 - INFO - epoch-145, train_loss-0.0004085, val_loss-0.0005464
+2025-01-07 09:08:55 - INFO - epoch-146, train_loss-0.0004084, val_loss-0.0005448
+2025-01-07 09:15:49 - INFO - epoch-147, train_loss-0.0004084, val_loss-0.0005393
+2025-01-07 09:15:51 - INFO - Saved new best model at epoch 147 with validation loss 0.0005393
+2025-01-07 09:22:44 - INFO - epoch-148, train_loss-0.0004084, val_loss-0.0005381
+2025-01-07 09:22:47 - INFO - Saved new best model at epoch 148 with validation loss 0.0005381
+2025-01-07 09:29:41 - INFO - epoch-149, train_loss-0.0004084, val_loss-0.0005348
+2025-01-07 09:29:46 - INFO - Saved new best model at epoch 149 with validation loss 0.0005348
+2025-01-07 09:36:40 - INFO - epoch-150, train_loss-0.0004084, val_loss-0.0005304
+2025-01-07 09:36:45 - INFO - Saved new best model at epoch 150 with validation loss 0.0005304
+2025-01-07 09:43:38 - INFO - epoch-151, train_loss-0.0004084, val_loss-0.0005274
+2025-01-07 09:43:41 - INFO - Saved new best model at epoch 151 with validation loss 0.0005274
+2025-01-07 09:50:47 - INFO - epoch-152, train_loss-0.0004084, val_loss-0.0005249
+2025-01-07 09:50:49 - INFO - Saved new best model at epoch 152 with validation loss 0.0005249
+2025-01-07 09:57:51 - INFO - epoch-153, train_loss-0.0004084, val_loss-0.0005237
+2025-01-07 09:57:53 - INFO - Saved new best model at epoch 153 with validation loss 0.0005237
+2025-01-07 10:04:45 - INFO - epoch-154, train_loss-0.0004084, val_loss-0.0005217
+2025-01-07 10:04:47 - INFO - Saved new best model at epoch 154 with validation loss 0.0005217
+2025-01-07 10:11:40 - INFO - epoch-155, train_loss-0.0004084, val_loss-0.0005171
+2025-01-07 10:11:42 - INFO - Saved new best model at epoch 155 with validation loss 0.0005171
+2025-01-07 10:18:35 - INFO - epoch-156, train_loss-0.0004084, val_loss-0.0005113
+2025-01-07 10:18:37 - INFO - Saved new best model at epoch 156 with validation loss 0.0005113
+2025-01-07 10:25:30 - INFO - epoch-157, train_loss-0.0004083, val_loss-0.0005108
+2025-01-07 10:25:31 - INFO - Saved new best model at epoch 157 with validation loss 0.0005108
+2025-01-07 10:32:25 - INFO - epoch-158, train_loss-0.0004084, val_loss-0.0005082
+2025-01-07 10:32:27 - INFO - Saved new best model at epoch 158 with validation loss 0.0005082
+2025-01-07 10:39:20 - INFO - epoch-159, train_loss-0.0004084, val_loss-0.0005012
+2025-01-07 10:39:22 - INFO - Saved new best model at epoch 159 with validation loss 0.0005012
+2025-01-07 10:46:16 - INFO - epoch-160, train_loss-0.0004083, val_loss-0.0005027
+2025-01-07 10:53:10 - INFO - epoch-161, train_loss-0.0004083, val_loss-0.0004996
+2025-01-07 10:53:12 - INFO - Saved new best model at epoch 161 with validation loss 0.0004996
+2025-01-07 11:00:05 - INFO - epoch-162, train_loss-0.0004084, val_loss-0.0004963
+2025-01-07 11:00:13 - INFO - Saved new best model at epoch 162 with validation loss 0.0004963
+2025-01-07 11:07:05 - INFO - epoch-163, train_loss-0.0004083, val_loss-0.0004872
+2025-01-07 11:07:14 - INFO - Saved new best model at epoch 163 with validation loss 0.0004872
+2025-01-07 11:14:06 - INFO - epoch-164, train_loss-0.0004084, val_loss-0.0004849
+2025-01-07 11:14:12 - INFO - Saved new best model at epoch 164 with validation loss 0.0004849
+2025-01-07 11:21:06 - INFO - epoch-165, train_loss-0.0004084, val_loss-0.0004759
+2025-01-07 11:21:17 - INFO - Saved new best model at epoch 165 with validation loss 0.0004759
+2025-01-07 11:28:11 - INFO - epoch-166, train_loss-0.0004084, val_loss-0.0004636
+2025-01-07 11:28:16 - INFO - Saved new best model at epoch 166 with validation loss 0.0004636
+2025-01-07 11:35:10 - INFO - epoch-167, train_loss-0.0004083, val_loss-0.0004508
+2025-01-07 11:35:12 - INFO - Saved new best model at epoch 167 with validation loss 0.0004508
+2025-01-07 11:42:06 - INFO - epoch-168, train_loss-0.0004083, val_loss-0.0004272
+2025-01-07 11:42:08 - INFO - Saved new best model at epoch 168 with validation loss 0.0004272
+2025-01-07 11:49:01 - INFO - epoch-169, train_loss-0.0004083, val_loss-0.0004159
+2025-01-07 11:49:03 - INFO - Saved new best model at epoch 169 with validation loss 0.0004159
+2025-01-07 11:55:56 - INFO - epoch-170, train_loss-0.0004083, val_loss-0.0004167
+2025-01-07 12:02:49 - INFO - epoch-171, train_loss-0.0004083, val_loss-0.0004169
+2025-01-07 12:09:42 - INFO - epoch-172, train_loss-0.0004083, val_loss-0.0004175
+2025-01-07 12:16:35 - INFO - epoch-173, train_loss-0.0004083, val_loss-0.0004165
+2025-01-07 12:23:29 - INFO - epoch-174, train_loss-0.0004083, val_loss-0.0004154
+2025-01-07 12:23:31 - INFO - Saved new best model at epoch 174 with validation loss 0.0004154
+2025-01-07 12:30:24 - INFO - epoch-175, train_loss-0.0004083, val_loss-0.0004142
+2025-01-07 12:30:27 - INFO - Saved new best model at epoch 175 with validation loss 0.0004142
+2025-01-07 12:37:22 - INFO - epoch-176, train_loss-0.0004083, val_loss-0.0004146
+2025-01-07 12:44:16 - INFO - epoch-177, train_loss-0.0004083, val_loss-0.0004154
+2025-01-07 12:51:11 - INFO - epoch-178, train_loss-0.0004083, val_loss-0.0004140
+2025-01-07 12:51:13 - INFO - Saved new best model at epoch 178 with validation loss 0.0004140
+2025-01-07 12:58:07 - INFO - epoch-179, train_loss-0.0004083, val_loss-0.0004157
+2025-01-07 13:05:01 - INFO - epoch-180, train_loss-0.0004083, val_loss-0.0004160
+2025-01-07 13:12:22 - INFO - epoch-181, train_loss-0.0004083, val_loss-0.0004143
+2025-01-07 13:19:16 - INFO - epoch-182, train_loss-0.0004083, val_loss-0.0004162
+2025-01-07 13:26:10 - INFO - epoch-183, train_loss-0.0004083, val_loss-0.0004156
+2025-01-07 13:33:08 - INFO - epoch-184, train_loss-0.0004083, val_loss-0.0004152
+2025-01-07 13:40:10 - INFO - epoch-185, train_loss-0.0004083, val_loss-0.0004150
+2025-01-07 13:47:31 - INFO - epoch-186, train_loss-0.0004083, val_loss-0.0004164
+2025-01-07 13:54:47 - INFO - epoch-187, train_loss-0.0004083, val_loss-0.0004155
+2025-01-07 14:02:09 - INFO - epoch-188, train_loss-0.0004083, val_loss-0.0004145
+2025-01-07 14:09:38 - INFO - epoch-189, train_loss-0.0004083, val_loss-0.0004135
+2025-01-07 14:09:41 - INFO - Saved new best model at epoch 189 with validation loss 0.0004135
+2025-01-07 14:16:55 - INFO - epoch-190, train_loss-0.0004083, val_loss-0.0004150
+2025-01-07 14:23:57 - INFO - epoch-191, train_loss-0.0004083, val_loss-0.0004159
+2025-01-07 14:30:53 - INFO - epoch-192, train_loss-0.0004083, val_loss-0.0004159
+2025-01-07 14:37:50 - INFO - epoch-193, train_loss-0.0004083, val_loss-0.0004185
+2025-01-07 14:44:45 - INFO - epoch-194, train_loss-0.0004083, val_loss-0.0004145
+2025-01-07 14:51:40 - INFO - epoch-195, train_loss-0.0004083, val_loss-0.0004172
+2025-01-07 14:58:36 - INFO - epoch-196, train_loss-0.0004083, val_loss-0.0004160
+2025-01-07 15:05:34 - INFO - epoch-197, train_loss-0.0004083, val_loss-0.0004140
+2025-01-07 15:12:30 - INFO - epoch-198, train_loss-0.0004083, val_loss-0.0004150
+2025-01-07 15:19:28 - INFO - epoch-199, train_loss-0.0004083, val_loss-0.0004155
+2025-01-07 15:26:24 - INFO - epoch-200, train_loss-0.0004083, val_loss-0.0004166
+2025-01-07 15:33:21 - INFO - epoch-201, train_loss-0.0004083, val_loss-0.0004167
+2025-01-07 15:40:23 - INFO - epoch-202, train_loss-0.0004083, val_loss-0.0004166
+2025-01-07 15:47:20 - INFO - epoch-203, train_loss-0.0004083, val_loss-0.0004167
+2025-01-07 15:54:18 - INFO - epoch-204, train_loss-0.0004083, val_loss-0.0004170
+2025-01-07 16:01:12 - INFO - epoch-205, train_loss-0.0004083, val_loss-0.0004189
+2025-01-07 16:08:10 - INFO - epoch-206, train_loss-0.0004083, val_loss-0.0004162
+2025-01-07 16:15:06 - INFO - epoch-207, train_loss-0.0004083, val_loss-0.0004172
+2025-01-07 16:22:07 - INFO - epoch-208, train_loss-0.0004083, val_loss-0.0004170
+2025-01-07 16:29:15 - INFO - epoch-209, train_loss-0.0004083, val_loss-0.0004161
+2025-01-07 16:36:30 - INFO - epoch-210, train_loss-0.0004083, val_loss-0.0004165
+2025-01-07 16:43:45 - INFO - epoch-211, train_loss-0.0004083, val_loss-0.0004158
+2025-01-07 16:51:07 - INFO - epoch-212, train_loss-0.0004083, val_loss-0.0004180
+2025-01-07 16:58:29 - INFO - epoch-213, train_loss-0.0004083, val_loss-0.0004160
+2025-01-07 17:05:45 - INFO - epoch-214, train_loss-0.0004083, val_loss-0.0004171
+2025-01-07 17:12:42 - INFO - epoch-215, train_loss-0.0004083, val_loss-0.0004170
+2025-01-07 17:19:38 - INFO - epoch-216, train_loss-0.0004082, val_loss-0.0004157
+2025-01-07 17:26:35 - INFO - epoch-217, train_loss-0.0004083, val_loss-0.0004197
+2025-01-07 17:33:32 - INFO - epoch-218, train_loss-0.0004083, val_loss-0.0004173
+2025-01-07 17:40:31 - INFO - epoch-219, train_loss-0.0004082, val_loss-0.0004154
+2025-01-07 17:47:29 - INFO - epoch-220, train_loss-0.0004082, val_loss-0.0004153
+2025-01-07 17:54:26 - INFO - epoch-221, train_loss-0.0004083, val_loss-0.0004155
+2025-01-07 18:01:21 - INFO - epoch-222, train_loss-0.0004082, val_loss-0.0004151
+2025-01-07 18:08:18 - INFO - epoch-223, train_loss-0.0004082, val_loss-0.0004147
+2025-01-07 18:15:14 - INFO - epoch-224, train_loss-0.0004082, val_loss-0.0004149
+2025-01-07 18:22:11 - INFO - epoch-225, train_loss-0.0004083, val_loss-0.0004154
+2025-01-07 18:29:07 - INFO - epoch-226, train_loss-0.0004082, val_loss-0.0004165
+2025-01-07 18:36:03 - INFO - epoch-227, train_loss-0.0004083, val_loss-0.0004180
+2025-01-07 18:42:59 - INFO - epoch-228, train_loss-0.0004083, val_loss-0.0004163
+2025-01-07 18:49:55 - INFO - epoch-229, train_loss-0.0004082, val_loss-0.0004154
+2025-01-07 18:56:52 - INFO - epoch-230, train_loss-0.0004082, val_loss-0.0004175
+2025-01-07 19:03:47 - INFO - epoch-231, train_loss-0.0004082, val_loss-0.0004153
+2025-01-07 19:10:43 - INFO - epoch-232, train_loss-0.0004082, val_loss-0.0004171
+2025-01-07 19:17:39 - INFO - epoch-233, train_loss-0.0004082, val_loss-0.0004163
+2025-01-07 19:24:35 - INFO - epoch-234, train_loss-0.0004082, val_loss-0.0004151
+2025-01-07 19:31:31 - INFO - epoch-235, train_loss-0.0004082, val_loss-0.0004149
+2025-01-07 19:38:31 - INFO - epoch-236, train_loss-0.0004082, val_loss-0.0004152
+2025-01-07 19:45:37 - INFO - epoch-237, train_loss-0.0004083, val_loss-0.0004168
+2025-01-07 19:52:48 - INFO - epoch-238, train_loss-0.0004083, val_loss-0.0004142
+2025-01-07 20:00:00 - INFO - epoch-239, train_loss-0.0004082, val_loss-0.0004151
+2025-01-07 20:07:13 - INFO - epoch-240, train_loss-0.0004082, val_loss-0.0004157
+2025-01-07 20:14:23 - INFO - epoch-241, train_loss-0.0004082, val_loss-0.0004146
+2025-01-07 20:21:36 - INFO - epoch-242, train_loss-0.0004082, val_loss-0.0004150
+2025-01-07 20:28:49 - INFO - epoch-243, train_loss-0.0004082, val_loss-0.0004143
+2025-01-07 20:36:05 - INFO - epoch-244, train_loss-0.0004082, val_loss-0.0004143
+2025-01-07 20:43:19 - INFO - epoch-245, train_loss-0.0004082, val_loss-0.0004145
+2025-01-07 20:50:36 - INFO - epoch-246, train_loss-0.0004082, val_loss-0.0004141
+2025-01-07 20:57:53 - INFO - epoch-247, train_loss-0.0004082, val_loss-0.0004130
+2025-01-07 20:57:55 - INFO - Saved new best model at epoch 247 with validation loss 0.0004130
+2025-01-07 21:05:12 - INFO - epoch-248, train_loss-0.0004082, val_loss-0.0004146
+2025-01-07 21:12:30 - INFO - epoch-249, train_loss-0.0004082, val_loss-0.0004142
+2025-01-07 21:19:42 - INFO - epoch-250, train_loss-0.0004082, val_loss-0.0004173
+2025-01-07 21:27:04 - INFO - epoch-251, train_loss-0.0004082, val_loss-0.0004157
+2025-01-07 21:33:59 - INFO - epoch-252, train_loss-0.0004082, val_loss-0.0004152
+2025-01-07 21:40:50 - INFO - epoch-253, train_loss-0.0004082, val_loss-0.0004141
+2025-01-07 21:47:42 - INFO - epoch-254, train_loss-0.0004082, val_loss-0.0004154
+2025-01-07 21:54:33 - INFO - epoch-255, train_loss-0.0004082, val_loss-0.0004143
+2025-01-07 22:01:30 - INFO - epoch-256, train_loss-0.0004082, val_loss-0.0004156
+2025-01-07 22:08:45 - INFO - epoch-257, train_loss-0.0004082, val_loss-0.0004142
+2025-01-07 22:15:48 - INFO - epoch-258, train_loss-0.0004082, val_loss-0.0004131
+2025-01-07 22:22:42 - INFO - epoch-259, train_loss-0.0004083, val_loss-0.0004134
+2025-01-07 22:29:36 - INFO - epoch-260, train_loss-0.0004083, val_loss-0.0004133
+2025-01-07 22:36:32 - INFO - epoch-261, train_loss-0.0004083, val_loss-0.0004144
+2025-01-07 22:43:27 - INFO - epoch-262, train_loss-0.0004082, val_loss-0.0004140
+2025-01-07 22:50:20 - INFO - epoch-263, train_loss-0.0004083, val_loss-0.0004132
+2025-01-07 22:57:14 - INFO - epoch-264, train_loss-0.0004083, val_loss-0.0004115
+2025-01-07 22:57:22 - INFO - Saved new best model at epoch 264 with validation loss 0.0004115
+2025-01-07 23:04:18 - INFO - epoch-265, train_loss-0.0004083, val_loss-0.0004114
+2025-01-07 23:04:24 - INFO - Saved new best model at epoch 265 with validation loss 0.0004114
+2025-01-07 23:11:19 - INFO - epoch-266, train_loss-0.0004083, val_loss-0.0004137
+2025-01-07 23:18:14 - INFO - epoch-267, train_loss-0.0004083, val_loss-0.0004139
+2025-01-07 23:25:08 - INFO - epoch-268, train_loss-0.0004083, val_loss-0.0004121
+2025-01-07 23:32:02 - INFO - epoch-269, train_loss-0.0004083, val_loss-0.0004126
+2025-01-07 23:38:55 - INFO - epoch-270, train_loss-0.0004083, val_loss-0.0004105
+2025-01-07 23:39:04 - INFO - Saved new best model at epoch 270 with validation loss 0.0004105
+2025-01-07 23:45:56 - INFO - epoch-271, train_loss-0.0004083, val_loss-0.0004152
+2025-01-07 23:52:50 - INFO - epoch-272, train_loss-0.0004083, val_loss-0.0004195
+2025-01-07 23:59:42 - INFO - epoch-273, train_loss-0.0004082, val_loss-0.0004182
+2025-01-08 00:06:34 - INFO - epoch-274, train_loss-0.0004083, val_loss-0.0004167
+2025-01-08 00:13:25 - INFO - epoch-275, train_loss-0.0004083, val_loss-0.0004200
+2025-01-08 00:20:18 - INFO - epoch-276, train_loss-0.0004083, val_loss-0.0004184
+2025-01-08 00:27:09 - INFO - epoch-277, train_loss-0.0004083, val_loss-0.0004181
+2025-01-08 00:34:03 - INFO - epoch-278, train_loss-0.0004083, val_loss-0.0004182
+2025-01-08 00:40:55 - INFO - epoch-279, train_loss-0.0004083, val_loss-0.0004184
+2025-01-08 00:47:47 - INFO - epoch-280, train_loss-0.0004083, val_loss-0.0004177
+2025-01-08 00:54:39 - INFO - epoch-281, train_loss-0.0004083, val_loss-0.0004186
+2025-01-08 01:01:31 - INFO - epoch-282, train_loss-0.0004083, val_loss-0.0004183
+2025-01-08 01:08:23 - INFO - epoch-283, train_loss-0.0004083, val_loss-0.0004214
+2025-01-08 01:15:16 - INFO - epoch-284, train_loss-0.0004083, val_loss-0.0004185
+2025-01-08 01:22:08 - INFO - epoch-285, train_loss-0.0004083, val_loss-0.0004156
+2025-01-08 01:29:02 - INFO - epoch-286, train_loss-0.0004083, val_loss-0.0004194
+2025-01-08 01:35:53 - INFO - epoch-287, train_loss-0.0004083, val_loss-0.0004197
+2025-01-08 01:42:46 - INFO - epoch-288, train_loss-0.0004083, val_loss-0.0004213
+2025-01-08 01:49:41 - INFO - epoch-289, train_loss-0.0004083, val_loss-0.0004149
+2025-01-08 01:56:34 - INFO - epoch-290, train_loss-0.0004083, val_loss-0.0004169
+2025-01-08 02:03:27 - INFO - epoch-291, train_loss-0.0004083, val_loss-0.0004205
+2025-01-08 02:10:20 - INFO - epoch-292, train_loss-0.0004083, val_loss-0.0004174
+2025-01-08 02:17:12 - INFO - epoch-293, train_loss-0.0004083, val_loss-0.0004218
+2025-01-08 02:24:05 - INFO - epoch-294, train_loss-0.0004083, val_loss-0.0004194
+2025-01-08 02:30:57 - INFO - epoch-295, train_loss-0.0004083, val_loss-0.0004193
+2025-01-08 02:37:48 - INFO - epoch-296, train_loss-0.0004083, val_loss-0.0004187
+2025-01-08 02:44:40 - INFO - epoch-297, train_loss-0.0004083, val_loss-0.0004193
+2025-01-08 02:51:57 - INFO - epoch-298, train_loss-0.0004083, val_loss-0.0004203
+2025-01-08 02:59:08 - INFO - epoch-299, train_loss-0.0004083, val_loss-0.0004197

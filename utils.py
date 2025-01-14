@@ -312,6 +312,56 @@ def compute_density_map_in_chimeraX(
 
     return p
 
+
+def compute_density_map_on_grid_in_chimeraX(
+    molecule_path_full,
+    target_map_path_full,
+    output_density_path_full,
+    density_resolution=1.0,
+    is_log=False,
+    log_path=os.getcwd() + os.path.sep + "chimeraX_logs",
+    script_path=os.getcwd() + os.path.sep + "chimeraX_scripts",
+):
+    """
+    Computes density map for the given molecule/conformer on the grid of the target map using ChimeraX. 
+    To achieve this, runs python script "chimeraX_density_map_on_grid.py" inside ChimeraX through a
+    subprocess.
+
+    Args:
+        molecule_path_full - full path to the input molecule file (including its name)
+        target_map_path_full - full path to the target map which grid will be used to compute 
+        the molecule's map
+        output_density_path_full - full path to the molecule's output density file (including its name)
+        density_resolution - desired resolution of the map (in Angstrom)
+        is_log - should we write logs for ChimeraX scripts
+        log_path - path to the folder where the log file will be stored (excluding the file's name which will be created automatically)
+        script_path - path to the folder with the python script for ChimeraX (excluding its name)
+
+    Returns:
+        p - object of the Popen class corresponding to the ChimeraX's subprocess
+    """
+
+    # name of the python script to run inside ChimeraX
+    scipt_name = "chimeraX_density_map_on_grid.py"
+
+    # options for the python script
+    option_names = ["-i", "-t", "-r", "-o"]
+    option_values = [molecule_path_full, target_map_path_full, density_resolution, output_density_path_full]
+    if is_log:
+        option_names.append("-l")
+        option_values.append(log_path)
+
+    # returns object corresponding to the subprocess
+    p = run_script_inside_chimeraX(
+        scipt_name,
+        script_path=script_path,
+        option_names=option_names,
+        option_values=option_values,
+    )
+
+    return p
+
+
 def compute_mol_map_correlation_in_chimera(
     molecule_path_full,
     target_density_path_full,
@@ -590,7 +640,7 @@ def delete_extension_from_filename(filename):
 
 def extract_filename_from_full_path(path_full):
     """
-    Extracts filename from the full (including the name) path to file.
+    Extracts filename from the full (including the name) path to a file.
 
     Args:
         full_path - full path to the file
@@ -600,6 +650,20 @@ def extract_filename_from_full_path(path_full):
     """
 
     return path_full.split(os.path.sep)[-1]
+
+
+def extract_folder_from_full_path(path_full):
+    """
+    Extracts path to the folder from the full (including the name) path to a file.
+
+    Args:
+        full_path - full path to the file
+
+    Returns:
+        path to the folder extracted from the full path
+    """
+
+    return os.path.sep.join(path_full.split(os.path.sep)[:-1])
 
 
 def extract_format_from_filename(filename):
@@ -1141,7 +1205,6 @@ def split_sdf_file_to_pdbs(
 
     mols = []  # list to store RDKit molecule objects
 
-    n_mols = 0
     with Chem.SDMolSupplier(sdf_path_full, sanitize=False, removeHs=remove_Hs) as suppl:
         for mol in suppl:
             if mol is None:
@@ -1150,18 +1213,18 @@ def split_sdf_file_to_pdbs(
                 )
                 continue
             mols.append(mol)
-            n_mols += 1
 
     pdb_path_full_list = []  # list to store full paths of the output .pdb files   
-    for i in range(n_mols):
-        pdb_filename = f"mol_{i + 1}_" + base_pdb_filename
+    for i in range(len(mols)):
+        pdb_filename = f"conf_{i + 1}_" + base_pdb_filename
         mol = mols[i]
         pdb_path_full = save_one_conformer_to_pdb(
             mol, -1, pdb_filename, pdb_path=pdb_path
         )
         pdb_path_full_list.append(pdb_path_full)
 
-
+    n_mols = len(pdb_path_full_list)
+    
     return n_mols, pdb_path_full_list
 
 

@@ -84,7 +84,7 @@ if __name__ == '__main__':
 
     ######################
     toy_df = pd.read_csv(os.path.join(toy_dir, "PDB_IDs_with_rdkit_length_less_than_16A_succ_gnina.csv")).sample(frac=1., random_state=123)
-    base_model_name = "only_final_unet_without_final_ReLU_norm_maps_less_noisy_bad_forward_to_2.0_batchsize_16_hidsize_256_levels_256_lr_5e-4_wd_1e-6"
+    base_model_name = "only_final_unet_without_final_ReLU_unnorm_maps_new_approach_less_noisy_bad_forward_to_2.0_batchsize_16_hidsize_256_levels_256_lr_5e-4_wd_1e-6"
 
     split_idx = int(0.9 * len(toy_df))
     train_df = toy_df.iloc[:split_idx]
@@ -97,8 +97,8 @@ if __name__ == '__main__':
     # base_corr_check_filename = "_corr0.6_passed_complexes.txt"
     base_corr_check_filename = "_complexes_map_less_noisy_bad_to_map2.0.txt"
     base_label_filename = "_ligand_res_2.0_gridpsace_0.5_nbox_32_size_16A.mrc"
-    base_low_res_density_filename = "_nconfs5_genmode_gnina_docking_boxextens2.5_res4.0_nbox32_gridspacing0.5_threshcorr0.7_delprob0.1_low_resolution_forward_model.mrc"
-    clarifying_graph_name = "_normalized_map_less_noisy_bad_to_map2.0"
+    base_low_res_density_filename = "_nconfs3_genmode_gnina_docking_boxextens1.0_res4.0_delprob0.0_low_resolution_forward_model.mrc"
+    clarifying_graph_name = "_unnormalized_map_new_approach_less_noisy_bad_to_map2.0"
     is_dataset_log = True
     dataset_log_path = os.path.join(os.getcwd(), "dataset_GIGN_main_logs")
     train_set = GraphDataset(
@@ -189,14 +189,22 @@ if __name__ == '__main__':
         % (epoch, epoch_train_loss, epoch_val_loss)
         logger.info(msg)
 
-        if (epoch >= 10) and (epoch_val_loss < best_val_loss):
-            model_dir = logger.get_model_dir()
-            model_pkl_file = os.path.join(model_dir, "model.pkl")
-            joblib.dump(model, model_pkl_file)
-            best_val_loss = epoch_val_loss
+        # if (epoch >= 10) and (epoch_val_loss < best_val_loss):
+        #     model_dir = logger.get_model_dir()
+        #     model_pkl_file = os.path.join(model_dir, "model.pkl")
+        #     joblib.dump(model, model_pkl_file)
+        #     best_val_loss = epoch_val_loss
 
-            msg = "Saved new best model at epoch %d with validation loss %.7f" \
-            % (epoch, best_val_loss)
+        #     msg = "Saved new best model at epoch %d with validation loss %.7f" \
+        #     % (epoch, best_val_loss)
+        #     logger.info(msg)
+
+        if epoch % 10 == 0:
+            model_dir = logger.get_model_dir()
+            model_pkl_file = os.path.join(model_dir, f"model_{epoch}.pkl")
+            joblib.dump(model, model_pkl_file)
+
+            msg = "Saved model at epoch %d" % (epoch)
             logger.info(msg)
 
 

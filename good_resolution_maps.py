@@ -56,7 +56,7 @@ def main(
         complex_folder = os.path.join(db_path, complex_name) # folder with the complex data
         output_density_path_full = os.path.join(
             complex_folder,
-            f"{complex_name}_ligand_res_{density_resolution}_gridpsace_{grid_spacing}_nbox_{n_box}_size_{int(n_box*grid_spacing)}A.mrc"
+            f"{complex_name}_ligand_res_{density_resolution}_gridpsace_{grid_spacing}_nbox_{n_box}_size_{int(n_box*grid_spacing)}A_label.mrc"
         )
         p = compute_density_map_in_chimeraX(
             ligand_path_full,
@@ -106,7 +106,7 @@ if __name__ == '__main__':
 
     # load molecule names
     complex_names_csv = (
-        db_path + os.path.sep + "PDB_IDs_with_rdkit_length_less_than_16A_succ_gnina.csv"
+        db_path + os.path.sep + "PDB_IDs_with_rdkit_length_less_than_24A.csv"
     )
     complex_names = read_complexes_names_from_file(complex_names_csv)
 
@@ -151,8 +151,8 @@ if __name__ == '__main__':
 
     # specify keyword arguments for the main function
     base_ligand_name = "_ligand.pdb"
-    density_resolution = 4.0
-    n_box = 32
+    density_resolution = 2.0
+    n_box = 48
     grid_spacing = 0.5
     chimeraX_script_path = os.path.join(os.getcwd(), "chimeraX_scripts")
     main_kwargs = {
