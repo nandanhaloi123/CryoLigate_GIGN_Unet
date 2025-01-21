@@ -28,8 +28,8 @@
 2025-01-06 18:39:06 - INFO - epoch-20, train_loss-0.0006769, val_loss-0.0006550
 2025-01-06 18:46:00 - INFO - epoch-21, train_loss-0.0006769, val_loss-0.0007238
 2025-01-06 18:52:54 - INFO - epoch-22, train_loss-0.0006769, val_loss-0.0012207
-2025-01-06 18:59:48 - INFO - epoch-23, train_loss-0.0006769, val_loss-0.0011
-2025-01-06 19:06:40 - INFO - epoch-24, train_loss-0.0006769, val_loss-0.0009
+2025-01-06 18:59:48 - INFO - epoch-23, train_loss-0.0006769, val_loss-0.0023703
+2025-01-06 19:06:40 - INFO - epoch-24, train_loss-0.0006769, val_loss-0.0034218
 2025-01-06 19:13:33 - INFO - epoch-25, train_loss-0.0006934, val_loss-0.0006544
 2025-01-06 19:20:27 - INFO - epoch-26, train_loss-0.0006769, val_loss-0.0006544
 2025-01-06 19:27:20 - INFO - epoch-27, train_loss-0.0006769, val_loss-0.0006544

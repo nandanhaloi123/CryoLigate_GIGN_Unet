@@ -4,7 +4,7 @@ import mrcfile
 import joblib
 import os
 import numpy as np
-from dataset_GIGN import mol2graph, normalize_density_minmax, normalize_density_with_percentile
+from generate_dataset import generate_network_data
 from torch_geometric.data import Batch, Data
 from utils import delete_extension_from_filename, extract_filename_from_full_path
 
@@ -29,40 +29,6 @@ def generate_pyg(low_res_density_path, save_path):
 
 if __name__ == "__main__":
     experimental_data = os.path.join(os.getcwd(), "experimental_data")
-
-    # low_res_densities_names = [
-    #     "6ply_Ligand_Map_scaled_boxed_pixel_0.5_rescaled_For_Elisei.mrc",
-    #     "6w6e_Ligand_Map_scaled_boxed_For_Elisei.mrc",
-    #     "7l31_Ligand_Map_scaled_boxed_pixel_0.5_rescaled_For_Elisei.mrc",
-    #     "7zh6_Ligand_Map_scaled_boxed_pixel_0.5_rescaled_For_Elisei.mrc",
-    #     "8hfl_Ligand_map_scaled_boxed_pix0.5_rescaled_For_Elisei.mrc",
-    #     "8hnd_Ligand_Map_scaled_boxed_pixel_0.5_rescaled_For_Elisei.mrc",
-    #     "8ihk_Ligand_Map_scaled_boxed_pixel_0.5_rescaled_For_Elisei.mrc",
-    #     "8j75_Ligand_Map_scaled_boxed_pixel_0.5_rescaled_For_Elisei.mrc",
-    #     "8w8s_Ligand_Map_scaled_boxed_pixel_0.5_rescaled_For_Elisei.mrc",
-    #     "8wfk_Ligand_Map_scaled_boxed_pixel_0.5_rescaled_For_Elisei.mrc",
-    #     "8xv2_Ligand_Map_scaled_boxed_pixel_0.5_rescaled_For_Elisei.mrc",
-    #     "8x64_Ligand_Map_scaled_boxed_pixel_0.5_rescaled_For_Elisei.mrc",
-    #     "8gua_Ligand_Map_scaled_boxed_pixel_0.5_rescaled_For_Elisei.mrc",
-    #     "8txz_Ligand_Map_scaled_boxed_pixel_0.5_rescaled_For_Elisei.mrc"
-
-    # ]
-
-    # low_res_densities_names = [
-    #     "7l31_Ligand_Map_scaled_boxed.mrc",
-    #     "8hfl_Ligand_Map_scaled_boxed.mrc",
-    #     "8hnd_Ligand_Map_scaled_boxed.mrc",
-    #     "8w8s_Ligand_Map_scaled_boxed.mrc",
-    #     "8xv2_Ligand_Map_scaled_boxed.mrc"
-
-    # ]
-
-    # low_res_densities_names = [
-    #     "6ply_Ligand_Map_scaled_boxed_pixel_0.5_rescaled_For_Elisei_downsampled.mrc",
-    #     "8hnd_Ligand_Map_scaled_boxed_pixel_0.5_rescaled_For_Elisei_downsampled.mrc",
-    #     "8w8s_Ligand_Map_scaled_boxed_pixel_0.5_rescaled_For_Elisei_downsampled.mrc"
-
-    # ]
 
     low_res_densities_names = [
         "6ply_Ligand_Map_filtered_gaus_0.7_newscale_newbox.mrc",
@@ -90,17 +56,6 @@ if __name__ == "__main__":
             f"model_{epoch}.pkl"
             )  
 
-
-        # epoch = 60
-
-        # model_name = f"L2_with_ReLU_epoch{epoch}"
-        # model_path = os.path.join(
-        #     os.getcwd(),
-        #     "model",
-        #     "only_final_unet_with_final_ReLU_L2loss_norm_minmax_maps_forward_model_bad_nconfs3_to_good_res2.0_batchsize_64_hidsize_256_levels_256_lr_5e-4_wd_1e-5_20250103_170201",
-        #     "model",
-        #     f"model_{epoch}.pkl"
-        #     )  
 
         device = "cuda" if torch.cuda.is_available() else "cpu"
 

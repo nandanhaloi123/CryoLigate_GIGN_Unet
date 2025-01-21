@@ -29,93 +29,10 @@ from utils import (
     find_pdb_protein_file_in_db,
     find_mrc_density_file_in_db,
     log,
-    extract_filename_from_full_path,
-    delete_extension_from_filename,
     apply_args_and_kwargs,
     read_complexes_names_from_file,
 
 )
-
-
-# # Conver PDB to PDBQT files
-# def convert_pdb_to_pdbqt(data_dir, data_df):
-#     pbar = tqdm(total=len(data_df))
-#     # ob_Conversion = openbabel.OBConversion()
-#     # ob_Conversion.SetInAndOutFormats("pdb", "pdbqt")
-#     for i, row in data_df.iterrows():
-#         # cid, pKa = row['pdbid'], float(row['-logKd/Ki'])
-#         cid = row['pdbid']
-#         protein_path_input = os.path.join(data_dir, cid, f'{cid}_protein_processed.pdb')
-#         protein_path_output = os.path.join(data_dir, cid, f'{cid}_protein_processed ')
-#         ligand_path_input = os.path.join(data_dir, cid, f'{cid}_ligand.pdb')
-#         ligand_path_output = os.path.join(data_dir, cid, f'{cid}_ligand.pdbqt')
-   
-#         # mol = openbabel.OBMol()
-#         # if not ob_Conversion.ReadFile(mol, protein_path_input):
-#         #     print(f"Error reading {protein_path_input}")
-#         #     return
-        
-#         # # Write to the output PDBQT file
-#         # if not ob_Conversion.WriteFile(mol, protein_path_output):
-#         #     print(f"Error writing {protein_path_output}")
-#         #     return
-        
-#         # if not ob_Conversion.ReadFile(mol, ligand_path_input):
-#         #     print(f"Error reading {ligand_path_input}")
-#         #     return
-        
-#         # # Write to the output PDBQT file
-#         # if not ob_Conversion.WriteFile(mol, ligand_path_output):
-#         #     print(f"Error writing {ligand_path_output}")
-#         #     return
-
-#         bashCommand_ligand = f"prepare_ligand4 -l {ligand_path_input} -o {ligand_path_output}"   # this needs vina
-#         os.system(bashCommand_ligand)
-
-#         bashCommand_receptor = f"prepare_receptor4 -r {protein_path_input} -o {protein_path_output}"
-#         os.system(bashCommand_receptor)
-    
-#         print(f"Conversion successful PROTEIN: {protein_path_input} -> {protein_path_output}")
-#         print(f"Conversion successful LIGAND: {ligand_path_input} -> {ligand_path_output}")
-
-
-# def Vina_docking(data_dir,data_df):
-#     pbar = tqdm(total=len(data_df))
-#     v = Vina(sf_name='vina')
-#     for i, row in data_df.iterrows():
-#         # cid, pKa = row['pdbid'], float(row['-logKd/Ki'])
-#         cid = row['pdbid']
-#         receptor = os.path.join(data_dir, cid, f'{cid}_protein_processed')
-#         ligand = os.path.join(data_dir, cid, f'{cid}_ligand')
-#         output = os.path.join(data_dir, cid, f'{cid}_vina_out')
-
-#         mrc = mrcfile.open(f'{ligand}.mrc', mode='r+')
-#         density_map = mrc.data
-#         origin = mrc.header.origin
-#         origin = np.array(origin.tolist())
-
-#         # Voxel size in angstroms (modify if known from the MRC header)
-#         voxel_size = mrc.voxel_size.x  # Or manually input the voxel size if known
-
-#         center_of_mass = calculate_center_of_mass_of_density(density_map, voxel_size) + origin
-
-#         v.set_receptor(f'{receptor}.pdbqt')
-#         v.set_ligand_from_file(f'{ligand}.pdbqt')
-        
-#         v.compute_vina_maps(center=center_of_mass, box_size=[30, 30, 30])
-
-#         # Score the current pose
-#         energy = v.score()
-#         print('Score before minimization: %.3f (kcal/mol)' % energy[0])
-
-#         # Minimized locally the current pose
-#         energy_minimized = v.optimize()
-#         print('Score after minimization : %.3f (kcal/mol)' % energy_minimized[0])
-#         v.write_pose(f'{ligand}_minimized.pdbqt', overwrite=True)
-
-#         # Dock the ligand
-#         v.dock(exhaustiveness=32, n_poses=20)
-#         v.write_poses(f'{output}.pdbqt', n_poses=10, overwrite=True)
 
 
 def gnina_docking(    
@@ -185,64 +102,6 @@ def gnina_docking(
     )
 
     return p
-
-# def save_frames_from_trajectory_rdkit(data_dir,data_df):
-#     pbar = tqdm(total=len(data_df))
-#     for i, row in data_df.iterrows():
-#         # cid, pKa = row['pdbid'], float(row['-logKd/Ki'])
-#         cid = row['pdbid']
-#         print("PDB:", cid)
-#         # input = os.path.join(data_dir, cid, f'{cid}_gnina_docked.sdf.gz')
-#         # bashCommand_ligand = f"gunzip {input}"
-#         # os.system(bashCommand_ligand)
-        
-#         sdf_file = os.path.join(data_dir, cid, f'{cid}_gnina_docked.sdf')
-#         output = os.path.join(data_dir, cid, f'{cid}_gnina_docked_frame')
-
-#         suppl = Chem.SDMolSupplier(sdf_file)
-#         for idx, mol in enumerate(suppl):
-#             if mol is None:
-#                 continue
-#             # Save the current molecule to a temporary SDF file
-#             mol_sdf = f"{output}_{idx}.sdf"
-#             writer = Chem.SDWriter(mol_sdf)
-#             writer.write(mol)
-#             writer.close()
-
-# def save_frames_from_trajectory_pymol(data_dir,data_df):
-
-
-#     sdf_file_trajectory = os.path.join(data_dir, cid, f'{cid}_gnina_docked.sdf')
-#     output = os.path.join(data_dir, cid, f'{cid}_gnina_docked_frame')
-
-
-#     # Load the structure and trajectory files
-#     cmd.load(sdf_file_trajectory, "molecule")  # Load the trajectory into the structure
-
-#     # Get the number of frames in the trajectory
-#     num_frames = cmd.count_states("molecule")
-
-#     # Save each frame separately
-#     for frame in range(1, num_frames + 1):
-#         cmd.frame(frame)
-#         output_file = f"{output}_{frame}.mol2"
-#         cmd.save(output_file, "molecule")
-#         print(f"Saved {output_file}")
-
-#         # Clean up
-#     cmd.delete("molecule")
-
-# def run_chimera(path_to_pdb, path_to_density):
-#     # NOTE: this function works only for ChimeraX
-#     with open('chimera_tmp_script.py', 'w') as f:
-#         f.write('''from chimera import runCommand as rc\nrc("open {path1}")\nrc("molmap #0 5")\nrc("open {path2}")\nrc("measure correlation #0.1 #1")\n'''.format(path1 = path_to_pdb, path2 = path_to_density))
-#     os.system('chimera --nogui --script chimera_tmp_script.py  > chimera_res.tmp')
-#     with open('chimera_res.tmp', 'r') as f2:
-#         for line in f2:
-#             if "correlation" in line:
-#                 cc = float(line.strip().split()[2][:-1])
-#                 break
-#     return cc
 
 
 def filter_docked_poses_by_correlation(
@@ -502,32 +361,6 @@ def main(
             )
 
 
-
-# def get_cross_correlation(data_dir,data_df):
-#     pbar = tqdm(total=len(data_df))
-#     for i, row in data_df.iterrows():
-#         # cid, pKa = row['pdbid'], float(row['-logKd/Ki'])
-#         cid = row['pdbid']
-#         print("PDB:", cid)
-#         path_to_density = os.path.join(data_dir, cid, f'{cid}_ligand.mrc')
-#         ligand_docked_files = os.path.join(data_dir, cid, f'{cid}_gnina_docked_frame')
-#         CC_output_file_name = os.path.join(data_dir, cid, f'{cid}_gnina_docked_cc.txt')
-#         f = open(CC_output_file_name, "w")
-#         for idx in range(1,10):
-#             try:
-#                 pdb_file = f"{ligand_docked_files}_{idx}.mol2"
-#                 mrc_file = f"{path_to_density}"
-#                 print(pdb_file)
-#                 print(mrc_file)
-#                 cc = run_chimera(pdb_file, mrc_file)
-#                 print(cc)
-#                 f.write(str(cc) + "\n")
-#             except:
-#                 pass
-#         f.close()
-
-
-    
 if __name__ == '__main__':
 
     # path to the database with molecule data
@@ -541,12 +374,6 @@ if __name__ == '__main__':
             "PDBBind_Zenodo_6408497",
         ]
     )
-
-    # load molecule names
-    complex_names_csv = (
-        db_path + os.path.sep + "PDB_IDs_with_rdkit_length_less_than_16A_succ_gnina.csv"
-    )
-    complex_names = read_complexes_names_from_file(complex_names_csv)
 
     # read script's arguments
     opts, args = getopt.getopt(sys.argv[1:], "s:e:p:")
@@ -565,13 +392,18 @@ if __name__ == '__main__':
     assert end_index is not None, "End index is None after arugment's parsing"
     assert n_proc is not None, "Number of processes is None after arugment's parsing"
 
-    # apply start and end indice to the molecule names
+    # load molecule names
+    complex_names_csv = (
+        db_path + os.path.sep + "PDB_IDs_with_rdkit_length_less_than_24A_nbonds_less_than_10.csv"
+    )
+    complex_names = read_complexes_names_from_file(complex_names_csv)
+
+    # apply start and end indices to the molecule names
     complex_names = complex_names[start_index : (end_index + 1)]
     n_complexes = len(complex_names)
     print(f"Computing docking for {n_complexes} complexes....")
 
     # create log folders
-    # NOTE: If is_..._log == True, it's important to create the folders cause the code won't work otherwise!
     is_chimeraX_log = False
     chimeraX_log_path = None
     if is_chimeraX_log:
@@ -590,15 +422,15 @@ if __name__ == '__main__':
     # specify keyword arguments for the main function
     base_ligand_name = "_ligand.pdb"
     base_protein_name = "_protein_processed.pdb"
-    base_density_name = "_nconfs10_genmodedocking_res3.5_nbox16_threshcorr0.3_delprob0.2_low_resolution_forward_model.mrc"
-    n_pos = 10
-    box_extension = 5.0
+    base_density_name = "_nconfs3_genmode_gnina_docking_boxextens1.0_res4.0_delprob0.0_low_resolution_forward_model.mrc"
+    n_pos = 3
+    box_extension = 1.0
     path_to_gnina = os.getcwd() + os.path.sep + "gnina" 
     write_corrs_to_file = True
     threshold_correlation = 0.6
     not_found_corr_value = 0.0
-    density_resolution = 3.5
-    n_box = 32
+    density_resolution = 4.0
+    n_box = 48
     grid_spacing = 0.5
     chimeraX_script_path = os.path.join(os.getcwd(), "chimeraX_scripts")
     clear_chimeraX_output = True
@@ -630,7 +462,7 @@ if __name__ == '__main__':
         complex_names,
         repeat(db_path, n_complexes),
     )  # iterable for positional arguments
-    main_kwargs_iter = repeat(main_kwargs, n_complexes)
+    main_kwargs_iter = repeat(main_kwargs, n_complexes) # iterable for keyword arguments
     starmap_args_iter = zip(
         repeat(main, n_complexes), main_args_iter, main_kwargs_iter
     )  # combined positional and keyword arguments for Pool.starmap()

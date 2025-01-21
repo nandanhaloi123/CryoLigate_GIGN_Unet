@@ -4,6 +4,10 @@ import sys
 from itertools import repeat
 from datetime import datetime, timezone
 from multiprocessing.pool import Pool
+
+# append repo path to sys for convenient imports
+sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
+
 from utils import (
     find_pdb_ligand_file_in_db,
     compute_density_map_in_chimeraX,
@@ -29,11 +33,11 @@ def main(
     chimeraX_script_path=os.path.join(os.getcwd(), "chimeraX_scripts"),
 ):
     """
-    The main function for computing good resolution density map.
+    The main function for generating good resolution (target) density maps.
 
     Args:
         complex_name - name (id) of the protein-ligand complex
-        db_path - path tp the database with the complexes' data
+        db_path - path to the database with the complexes' data
         base_ligand_name - base name for the ligand file (used to construct the full name)
         is_main_log - whether to write logs for the main function
         main_log_filename - name of the log file for the main function

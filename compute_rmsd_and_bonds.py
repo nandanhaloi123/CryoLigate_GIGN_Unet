@@ -8,15 +8,21 @@ from rdkit.Chem import Lipinski
 from utils import (
     read_molecule,
     find_pdb_ligand_file_in_db,
-    find_txt_file_in_db,
-    find_file_in_db,
-    extract_filename_from_full_path,
     delete_extension_from_filename,
     read_complexes_names_from_file,
     apply_args_and_kwargs,
 )
 
 def compute_rmsd(mol1, mol2):
+    """
+    Computes RMSD between two RDKit molecules.
+
+    Args:
+        mol1, mol2 - two RDKit molecules
+
+    Returns:
+        rmsd - computed value of the rmsd
+    """
 
     # Get conformers
     conf1 = mol1.GetConformer()
@@ -33,49 +39,30 @@ def compute_rmsd(mol1, mol2):
     return rmsd
 
 
-
-# def main(
-#         complex_name, 
-#         db_path, 
-#         base_ligand_filename="_ligand.pdb",
-#         base_corr_filename="_corr0.6_passed_complexes.txt",
-#         ):
-#     rmsd_list = []
-#     try:
-#         corr_path_full = find_txt_file_in_db(complex_name, db_path, base_txt_name=base_corr_filename)
-#         lignad_path_full = find_pdb_ligand_file_in_db(complex_name, db_path, base_ligand_name=base_ligand_filename)
-#         ligand_mol = read_molecule(lignad_path_full, remove_Hs=True, sanitize=True)
-#         with open(corr_path_full, "r") as corr_file:
-#             for line in corr_file:
-#                 try:
-#                     rdkit_path_full = line.strip()
-#                     rdkit_filename = extract_filename_from_full_path(rdkit_path_full)
-#                     docked_pose_name = delete_extension_from_filename(
-#                         "_".join(rdkit_filename.split("_")[3:])
-#                     ) + ".pdb"
-#                     docked_path_full = find_file_in_db(complex_name, db_path, docked_pose_name)
-#                     docked_mol = read_molecule(docked_path_full, remove_Hs=True, sanitize=True)
-#                     rmsd = compute_rmsd(ligand_mol, docked_mol)
-#                     rmsd_list.append(rmsd)
-#                 except Exception as e:
-#                     print(f"Failed to compute rmsd for docked pose {docked_pose_name} of complex {complex_name}: {e}")  
-
-#     except Exception as e:
-#         print(f"Failed to compute rmsd for complex {complex_name}: {e}")
-
-#     return rmsd_list
-
-
 def main(
         complex_name, 
         db_path,
         output_path_full, 
         base_ligand_filename="_lignad.pdb",
         base_conformers_filename="_ligand_delatoms_conformers_nconfs3_generation_mode_gnina_docking.pdb",
-        ):
+    ):
+    """
+    The main function to compute rmsd between generated conformers and reference ligand structure. Writes computed
+    rmsd, as well as, the number of rotatable bonds to an output file.
+
+    Args:
+        complex_name - name (id) of the protein-ligand complex
+        db_path - path to the database with the complexes' data
+        output_path_full - full path to the output file where rmsd and number of bonds will be written (same file for all complexes)
+        base_ligand_name - base name for the ligand file (used to construct the full name)
+        base_conformers_filename - base name for the file with conformers (used to construct the full name)
+    """
     try:
+        # find ligand file in the database and read it as an RDKit molecule
         ligand_path_full = find_pdb_ligand_file_in_db(complex_name, db_path, base_ligand_name=base_ligand_filename)
         ligand_mol = read_molecule(ligand_path_full, remove_Hs=True, sanitize=True)
+
+        # read input conformers file and split it to sepearate files for each conformer
         conformers_path_full = find_pdb_ligand_file_in_db(complex_name, db_path, base_ligand_name=base_conformers_filename)
         with open(conformers_path_full, "r") as conf_file:
             lines = []
@@ -93,22 +80,26 @@ def main(
                     temp_files_created.append(temp_file_path)
                     lines = []
         
+        # convert splitted conformers to RDKit molecules
         conformers_list = []
         for temp_file_path in temp_files_created:
             mol = read_molecule(temp_file_path, remove_Hs=True, sanitize=True)
             conformers_list.append(mol)
         
+        # compute rmsd and number of rotatable bonds
         rmsd_list = []
         for conformer_mol in conformers_list:
             rmsd = compute_rmsd(ligand_mol, conformer_mol)
             rmsd_list.append(rmsd)
         avg_rmsd = sum(rmsd_list) / len(rmsd_list)
-
         rot_bonds = Lipinski.NumRotatableBonds(ligand_mol)
+
+        # write rmsd and number of bonds to the output file
         with open(output_path_full, "a") as out_file:
             out_file.write(f"{complex_name} {avg_rmsd} {rot_bonds}\n")
         print(f"Computed rmsd for {complex_name}")
-
+        
+        # clear temporary files (splitted conformers' files)
         for temp_file_path in temp_files_created:
             os.remove(temp_file_path)
             
@@ -146,7 +137,7 @@ if __name__ == "__main__":
     complex_names = read_complexes_names_from_file(complex_names_csv)
     n_complexes = len(complex_names)
 
-    output_path_full = os.path.join(os.getcwd(), "rmsd_bonds.txt")
+    output_path_full = os.path.join(os.getcwd(), "rmsd_bonds.txt") # path to the output file where rmsd and number of bonds will be written
 
     base_ligand_filename="_ligand.pdb"
     base_conformers_filename = "_ligand_delatoms_conformers_nconfs3_generation_mode_gnina_docking.pdb"
@@ -154,7 +145,7 @@ if __name__ == "__main__":
     main_kwargs = {
         "base_ligand_filename": base_ligand_filename,
         "base_conformers_filename": base_conformers_filename,
-    }
+    } # keyword arguments for the main() function
 
     # run computations in several Processes to speed up
     # generate args and kwargs iterables for Pool.starmap()
@@ -163,7 +154,7 @@ if __name__ == "__main__":
         repeat(db_path, n_complexes),
         repeat(output_path_full, n_complexes)
     )  # iterable for positional arguments
-    main_kwargs_iter = repeat(main_kwargs, n_complexes)
+    main_kwargs_iter = repeat(main_kwargs, n_complexes) # iterable for keyword arguments
     starmap_args_iter = zip(
         repeat(main, n_complexes), main_args_iter, main_kwargs_iter
     )  # combined positional and keyword arguments for Pool.starmap()

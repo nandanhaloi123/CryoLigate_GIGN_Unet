@@ -35,4 +35,10 @@ pip install rdkit
 pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
 pip install torch_geometric
 conda install conda-forge::openbabel
+pip install transformers
+pip install pytorch-lightning==1.1.5 (NOTE: failed to install pytorch-fast-transformers==0.4.0)
+pip install datasets
+pip install jupyterlab
+pip install ipywidgets
+pip install bertviz
 Download gnina binary from https://github.com/gnina/gnina
