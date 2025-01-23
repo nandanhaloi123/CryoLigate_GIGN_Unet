@@ -5,6 +5,10 @@ import getopt
 from itertools import repeat
 from multiprocessing.pool import Pool
 from rdkit.Chem import Lipinski
+
+# append repo path to sys for convenient imports
+sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
+
 from utils import (
     read_molecule,
     find_pdb_ligand_file_in_db,

@@ -7,6 +7,10 @@ from datetime import datetime, timezone
 from multiprocessing.pool import Pool
 from rdkit import Chem
 from transformers import AutoModel, AutoTokenizer
+
+# append repo path to sys for convenient imports
+sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
+
 from utils import (
     read_molecule,
     find_pdb_ligand_file_in_db,

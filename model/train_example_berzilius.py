@@ -1,6 +1,7 @@
 
 # %%
 import os
+import sys
 import joblib
 os.environ['CUDA_VISIBLE_DEVICES'] = "0"
 import torch
@@ -8,16 +9,22 @@ torch.cuda.empty_cache()
 import torch.nn as nn
 import torch.optim as optim
 import pandas as pd
-from utils import AverageMeter
-from datetime import datetime, timezone
-from GIGN import GIGN
-from generate_dataset import NetworkDataset, PLIDataLoader
-from config.config_dict import Config
-from log.train_logger import TrainLogger
 import numpy as np
-from utils import *
+from datetime import datetime, timezone
 from sklearn.metrics import mean_squared_error
 from sklearn.model_selection import KFold
+
+
+# append repo path to sys for convenient imports
+sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
+
+from utils import AverageMeter
+from model.GIGN import GIGN
+from data_generation.generate_dataset import NetworkDataset, PLIDataLoader
+from config.config_dict import Config
+from log.train_logger import TrainLogger
+from utils import *
+
 
 
 class CustomLoss(nn.Module):

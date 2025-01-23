@@ -26,11 +26,11 @@ from utils import (
     apply_args_and_kwargs,
 )
 
-from cryoEM_maps.internal_flexibility import (
+from data_generation.internal_flexibility import (
     generate_conformers,
 )
 
-from cryoEM_maps.missing_parts import random_delete_atoms_from_pdb_file
+from data_generation.missing_parts import random_delete_atoms_from_pdb_file
 
 
 def generate_low_resolution_density(

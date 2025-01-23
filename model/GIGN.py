@@ -1,10 +1,16 @@
 # %%
+import sys
+import os
 import torch
 import torch.nn as nn
 from torch.nn import Linear
 from torch_geometric.nn import global_add_pool
-from HIL import HIL
-from Unet3D import *
+
+# append repo path to sys for convenient imports
+sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
+
+from model.HIL import HIL
+from model.Unet3D import *
 
 class GIGN(nn.Module):
     def __init__(self, node_dim, hidden_dim):
@@ -21,7 +27,6 @@ class GIGN(nn.Module):
         self.MLP1DTo3D = MLP1DTo3D(embedding_size, output_shape)
         self.UNet3D = UNet3D(in_channels=2, num_classes=1) 
         self.ReLU = nn.ReLU() 
-        #self.fc = FC(hidden_dim, hidden_dim, 3, 0.1, 1)
 
     def forward(self, data):
         # read data
@@ -46,8 +51,8 @@ class GIGN(nn.Module):
         print("After final ReLU:", x.size())
 
         return x
-    
-    
+
+
 class MLP1DTo3D(nn.Module):
     def __init__(self, input_size, output_shape):
         super(MLP1DTo3D, self).__init__()

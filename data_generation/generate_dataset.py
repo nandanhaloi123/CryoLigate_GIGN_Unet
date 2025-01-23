@@ -18,6 +18,9 @@ RDLogger.DisableLog('rdApp.*')
 np.set_printoptions(threshold=np.inf)
 warnings.filterwarnings('ignore')
 
+# append repo path to sys for convenient imports
+sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
+
 from utils import(
     delete_extension_from_filename,
     log,
@@ -113,7 +116,7 @@ def generate_network_data(ligand_embedding_path, label_path, low_res_density_pat
     Generates data for the network training and saves it to the specified file.
 
     Args:
-       ligand_embedding_path - full path to the file with liand embedding (including its name) 
+       ligand_embedding_path - full path to the file with ligand embedding (including its name) 
        label_path - full path to the file with target good resolution density (including its name) 
        low_res_density_path - full path to the file with input low resolution density (including its name) 
        save_path - full path to the file where generared data will be saved

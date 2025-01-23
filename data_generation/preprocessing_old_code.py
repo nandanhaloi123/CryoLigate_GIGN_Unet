@@ -16,6 +16,10 @@ RDLogger.DisableLog('rdApp.*')
 from openbabel import openbabel
 import numpy as np
 import mrcfile
+
+# append repo path to sys for convenient imports
+sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
+
 from utils import (
     delete_extension_from_filename, 
     extract_format_from_filename, 

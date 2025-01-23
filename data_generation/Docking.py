@@ -17,6 +17,10 @@ from tqdm import tqdm
 from rdkit import Chem
 from rdkit.Chem import AllChem
 from pymol import cmd
+
+# append repo path to sys for convenient imports
+sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
+
 from utils import (
     split_sdf_file_to_pdbs, 
     create_folder, 

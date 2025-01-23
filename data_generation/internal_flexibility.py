@@ -17,7 +17,7 @@ from utils import (
     create_folder,
     split_sdf_file_to_pdbs,
 )
-from Docking import gnina_docking
+from data_generation.Docking import gnina_docking
 
 def rdkit_conformers(
     ligand_path_full,
