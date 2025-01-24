@@ -473,7 +473,7 @@ if __name__ == '__main__':
             num_process = int(arg)
     assert num_process is not None, "Number of processes is None after arugment's parsing"
 
-    data_dir = '/proj/berzelius-2022-haloi/users/x_elima/PDBBind_Zenodo_6408497' # path to the database
+    data_dir = '/mnt/cephfs/projects/CryoLigate/PDBbind/PDBBind_Zenodo_6408497' # path to the database
 
     # load molecule names
     complex_names_csv = (

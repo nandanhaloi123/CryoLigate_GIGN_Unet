@@ -89,7 +89,7 @@ def main(
 
 if __name__ == "__main__":
 
-    db_path = '/proj/berzelius-2022-haloi/users/x_elima/PDBBind_Zenodo_6408497' # path to the database
+    db_path = '/mnt/cephfs/projects/CryoLigate/PDBbind/PDBBind_Zenodo_6408497' # path to the database
 
     # load molecule names
     complex_names_csv = (

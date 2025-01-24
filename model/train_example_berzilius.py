@@ -124,11 +124,13 @@ if __name__ == '__main__':
     cfg = 'TrainConfig_GIGN'
     config = Config(cfg)
     args = config.get_config()
-    batch_size = 32
-    epochs = 500
+    batch_size = 1
+    epochs = 2
+    lr = 5e-4
+    wd = 1e-4
 
     # data paths
-    data_root = '/proj/berzelius-2022-haloi/users/x_elima'
+    data_root = '/mnt/cephfs/projects/2023110101_Ligand_fitting_to_EM_maps/PDBbind'
     toy_dir = os.path.join(data_root, 'PDBBind_Zenodo_6408497')
     toy_df = pd.read_csv(os.path.join(toy_dir, "PDB_IDs_with_rdkit_length_less_than_24A_nbonds_less_than_10.csv"))
 
@@ -142,8 +144,7 @@ if __name__ == '__main__':
     valid_df = toy_df.iloc[val_idx]
 
     # clear name for the model (to distinguish in the future)
-    base_model_name = f"k_{k}_unet_with_embeddings_combined_loss_norm_minmax_maps_forward_model_bad_nconfs3_to_good_res2.0_batchsize_32_lr_5e-4_wd_1e-4"
-    model_name = base_model_name
+    model_name = f"k_{k}_unet_with_embeddings_combined_loss_norm_minmax_maps_forward_model_bad_nconfs3_to_good_res2.0_batchsize_{batch_size}_lr_{lr:.1e}_wd_{wd:.1e}"
     args["model_name"] = model_name
 
     # find and read training and validation data
@@ -187,7 +188,7 @@ if __name__ == '__main__':
     
     # logging some initial information
     logger = TrainLogger(args, cfg, create=True)
-    logger.info(__file__)
+    # logger.info(__file__)
     logger.info(f"train data: {len(train_set)}")
     logger.info(f"train unqiue data: {len(np.unique(train_set.data_paths))}")
     logger.info(f"valid data: {len(valid_set)}")
@@ -196,7 +197,7 @@ if __name__ == '__main__':
     # specify the model and optimizer
     device = torch.device('cuda:0')
     model = GIGN(35, 256).to(device)    
-    optimizer = optim.Adam(model.parameters(), lr=5e-4, weight_decay=1e-4)
+    optimizer = optim.Adam(model.parameters(), lr=lr, weight_decay=wd)
 
     # specify losses and the objects to track train losses
     criterion = CustomLoss()

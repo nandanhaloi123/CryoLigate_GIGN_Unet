@@ -252,7 +252,7 @@ if __name__ == "__main__":
 
     # load molecule names
     complex_names_csv = (
-        db_path + os.path.sep + "PDB_IDs_with_rdkit_length_less_than_24A.csv"
+        db_path + os.path.sep + "PDB_IDs_with_rdkit_length_less_than_24A_nbonds_less_than_10.csv"
     )
     complex_names = read_complexes_names_from_file(complex_names_csv)
 
