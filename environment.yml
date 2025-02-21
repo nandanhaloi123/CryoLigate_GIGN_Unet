@@ -23,8 +23,8 @@ pip install pathlib
 
 
 ## Conda Enviornment (ELisei Nov 2024)
-conda create --name CryoLigate_GIGN python=3.12.7
-conda activate CryoLigate_GIGN
+conda create --name CryoLigate python=3.12.7
+conda activate CryoLigate
 conda install -c conda-forge mamba
 mamba install -c conda-forge mdanalysis
 conda config --env --add channels conda-forge

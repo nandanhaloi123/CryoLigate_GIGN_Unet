@@ -19,7 +19,7 @@ from sklearn.model_selection import KFold
 sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 
 from utils import AverageMeter
-from model.GIGN import GIGN
+from model.Unet3D import CryoLigate
 from data_generation.generate_dataset import NetworkDataset, PLIDataLoader
 from config.config_dict import Config
 from log.train_logger import TrainLogger
@@ -121,16 +121,16 @@ def val(model, dataloader, device, criterion):
 if __name__ == '__main__':
 
     # config for the proper model saving
-    cfg = 'TrainConfig_GIGN'
+    cfg = 'TrainConfig_CryoLigate'
     config = Config(cfg)
     args = config.get_config()
-    batch_size = 1
-    epochs = 2
+    batch_size = 16
+    epochs = 500
     lr = 5e-4
     wd = 1e-4
 
     # data paths
-    data_root = '/mnt/cephfs/projects/2023110101_Ligand_fitting_to_EM_maps/PDBbind'
+    data_root = '/proj/berzelius-2022-haloi/users/x_nanha'
     toy_dir = os.path.join(data_root, 'PDBBind_Zenodo_6408497')
     toy_df = pd.read_csv(os.path.join(toy_dir, "PDB_IDs_with_rdkit_length_less_than_24A_nbonds_less_than_10.csv"))
 
@@ -144,7 +144,7 @@ if __name__ == '__main__':
     valid_df = toy_df.iloc[val_idx]
 
     # clear name for the model (to distinguish in the future)
-    model_name = f"k_{k}_unet_with_embeddings_combined_loss_norm_minmax_maps_forward_model_bad_nconfs3_to_good_res2.0_batchsize_{batch_size}_lr_{lr:.1e}_wd_{wd:.1e}"
+    model_name = f"k_{k}_Unet3D_with_Ligand_embeddings_Hybrid_loss_Norm_minmax_maps_Forward_model_bad_nconfs3_to_Good_res2.0_Batchsize_{batch_size}_lr_{lr:.1e}_wd_{wd:.1e}"
     args["model_name"] = model_name
 
     # find and read training and validation data
@@ -196,7 +196,7 @@ if __name__ == '__main__':
 
     # specify the model and optimizer
     device = torch.device('cuda:0')
-    model = GIGN(35, 256).to(device)    
+    model = CryoLigate().to(device)    
     optimizer = optim.Adam(model.parameters(), lr=lr, weight_decay=wd)
 
     # specify losses and the objects to track train losses

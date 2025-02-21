@@ -1,10 +1,9 @@
 {
     "train":
     {
-        "model": "GIGN", 
+        "model": "CryoLigate", 
         "data_root" : "./data",
         "save_dir" : "./model_save_folder",
-        "graph_type" : "Graph_GIGN",
         "repeat" : 3,
         "fold" : 0,
         "epochs" : 800,

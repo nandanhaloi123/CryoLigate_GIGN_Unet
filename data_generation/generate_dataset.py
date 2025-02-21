@@ -123,7 +123,7 @@ def generate_network_data(ligand_embedding_path, label_path, low_res_density_pat
     """
 
     # read ligand embedding data
-    ligand_embedding = torch.load(ligand_embedding_path)
+    ligand_embedding = torch.load(ligand_embedding_path, weights_only=False)
 
     # read and normalize output (target) good resolution density
     label_density = mrcfile.read(label_path)
@@ -455,7 +455,7 @@ class NetworkDataset(Dataset):
 
 
     def __getitem__(self, idx):
-        return torch.load(self.data_paths[idx])
+        return torch.load(self.data_paths[idx], weights_only=False)
 
     def collate_fn(self, batch):
         return Batch.from_data_list(batch)

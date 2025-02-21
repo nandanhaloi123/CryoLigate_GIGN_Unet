@@ -10,6 +10,6 @@
 
 #SBATCH -o slurm-%j.log
 
-python model/train_example_berzilius.py
+python Training/train_Unet3D_transformer.py
 
 EOF
