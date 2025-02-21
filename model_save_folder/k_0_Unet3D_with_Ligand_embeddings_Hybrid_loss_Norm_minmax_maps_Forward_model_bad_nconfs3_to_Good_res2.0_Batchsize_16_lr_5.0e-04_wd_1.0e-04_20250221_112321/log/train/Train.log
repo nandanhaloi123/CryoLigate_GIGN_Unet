@@ -22,3 +22,4 @@
 2025-02-21 12:08:16 - INFO - epoch-10, train_mse_loss-0.0003685, train_ssim_loss-0.3306753, val_mse_loss-0.0006919, val_ssim_loss-0.3627567
 2025-02-21 12:08:21 - INFO - Saved new best model at epoch 10 with validation loss 0.3634485
 2025-02-21 12:12:20 - INFO - epoch-11, train_mse_loss-0.0003676, train_ssim_loss-0.3299672, val_mse_loss-0.0006889, val_ssim_loss-0.3728828
+2025-02-21 12:16:18 - INFO - epoch-12, train_mse_loss-0.0003668, train_ssim_loss-0.3292626, val_mse_loss-0.0010675, val_ssim_loss-0.4116918
