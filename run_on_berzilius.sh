@@ -1,6 +1,6 @@
 #!/bin/bash
 
-#SBATCH --gpus 1
+#SBATCH --gpus 4
 
 #SBATCH -t 3-00:00:00
 
@@ -10,6 +10,6 @@
 
 #SBATCH -o slurm-%j.log
 
-python Training/train_Unet3D_transformer.py
+python Training/train_Unet3D_transformer_VAE.py
 
 EOF
