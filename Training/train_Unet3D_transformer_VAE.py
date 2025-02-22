@@ -19,7 +19,7 @@ from sklearn.model_selection import KFold
 sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 
 from utils import AverageMeter
-from model.Unet3D_transformer_each_ED import CryoLigate
+from model.Unet3D_transformer_VAE import CryoLigateVAE
 from data_generation.generate_dataset import NetworkDataset, PLIDataLoader
 from config.config_dict import Config
 from log.train_logger import TrainLogger
@@ -88,7 +88,7 @@ if __name__ == '__main__':
     cfg = 'TrainConfig_CryoLigate'
     config = Config(cfg)
     args = config.get_config()
-    batch_size = 4
+    batch_size = 16
     epochs = 500
     lr = 5e-4
     wd = 1e-4
@@ -108,7 +108,7 @@ if __name__ == '__main__':
     valid_df = toy_df.iloc[val_idx]
 
     # clear name for the model (to distinguish in the future)
-    model_name = f"k_{k}_Unet3D_transformer_each_ED_with_Ligand_embeddings_Hybrid_loss_Norm_minmax_maps_Forward_model_bad_nconfs3_to_Good_res2.0_Batchsize_{batch_size}_lr_{lr:.1e}_wd_{wd:.1e}"
+    model_name = f"k_{k}_Unet3D_transformer_VAE_with_Ligand_embeddings_Hybrid_loss_Norm_minmax_maps_Forward_model_bad_nconfs3_to_Good_res2.0_Batchsize_{batch_size}_lr_{lr:.1e}_wd_{wd:.1e}"
     args["model_name"] = model_name
 
     # find and read training and validation data
@@ -160,7 +160,7 @@ if __name__ == '__main__':
 
     # specify the model and optimizer
     # device = torch.device('cuda:0')
-    model = CryoLigate()
+    model = CryoLigateVAE()
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     if torch.cuda.device_count() > 1:
         print(f"Using {torch.cuda.device_count()} GPUs!")

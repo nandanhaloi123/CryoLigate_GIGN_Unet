@@ -124,7 +124,7 @@ if __name__ == '__main__':
     cfg = 'TrainConfig_CryoLigate'
     config = Config(cfg)
     args = config.get_config()
-    batch_size = 16
+    batch_size = 256
     epochs = 500
     lr = 5e-4
     wd = 1e-4
@@ -195,8 +195,15 @@ if __name__ == '__main__':
     logger.info(f"valid unqiue data: {len(np.unique(valid_set.data_paths))}")
 
     # specify the model and optimizer
-    device = torch.device('cuda:0')
-    model = CryoLigate().to(device)    
+    model = CryoLigate()
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    if torch.cuda.device_count() > 1:
+        print(f"Using {torch.cuda.device_count()} GPUs!")
+        model = nn.DataParallel(model)
+    model = model.to(device)   
+    
+    # device = torch.device('cuda:0')
+    # model = CryoLigate().to(device) 
     optimizer = optim.Adam(model.parameters(), lr=lr, weight_decay=wd)
 
     # specify losses and the objects to track train losses

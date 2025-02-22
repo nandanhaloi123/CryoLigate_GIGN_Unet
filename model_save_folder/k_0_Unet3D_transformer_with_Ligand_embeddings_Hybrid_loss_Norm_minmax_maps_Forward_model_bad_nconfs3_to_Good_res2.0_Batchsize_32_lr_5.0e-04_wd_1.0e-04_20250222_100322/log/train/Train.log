@@ -1,0 +1,5 @@
+2025-02-22 10:03:22 - INFO - train data: 13259
+2025-02-22 10:03:22 - INFO - train unqiue data: 13259
+2025-02-22 10:03:22 - INFO - valid data: 1474
+2025-02-22 10:03:22 - INFO - valid unqiue data: 1474
+2025-02-22 10:08:21 - INFO - epoch-0, train_mse_loss-0.0019977, train_ssim_loss--0.1164055, val_mse_loss-0.0007709, val_ssim_loss--0.1032549
