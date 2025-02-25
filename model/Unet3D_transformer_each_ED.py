@@ -101,7 +101,7 @@ class Transformer3D(nn.Module):
 
 class UpConv3DBlock(nn.Module):
     """3D UpSampling Block with Transformer."""
-    def __init__(self, in_channels, res_channels=0, last_layer=False):
+    def __init__(self, in_channels, res_channels=0, apply_transformer=True, last_layer=False):
         super().__init__()
         self.upconv = nn.ConvTranspose3d(in_channels, in_channels, kernel_size=2, stride=2)
         self.conv1 = nn.Conv3d(in_channels + res_channels, in_channels // 2, kernel_size=3, padding=1)
@@ -111,7 +111,8 @@ class UpConv3DBlock(nn.Module):
         self.last_layer = last_layer
 
         # Transformer block for decoder layers
-        self.transformer = Transformer3D(in_channels // 2, num_heads=8, mlp_dim=1024)
+        if apply_transformer:
+            self.transformer = Transformer3D(in_channels // 2, num_heads=8, mlp_dim=1024)
 
         if last_layer:
             self.conv3 = nn.Conv3d(in_channels // 2, 1, kernel_size=1)  # Single-channel output
@@ -122,7 +123,9 @@ class UpConv3DBlock(nn.Module):
             x = torch.cat((x, res), dim=1)
         x = self.relu(self.bn(self.conv1(x)))
         x = self.relu(self.bn(self.conv2(x)))
-        x = self.transformer(x)
+        
+        if self.apply_transformer:
+            x = self.transformer(x)
 
         return self.conv3(x) if self.last_layer else x
 
@@ -137,9 +140,9 @@ class UNet3DTransformer(nn.Module):
         self.bottleneck = Conv3DBlock(level_channels[2], bottleneck_channel, apply_transformer=True, bottleneck=True)
         
         # Decoders
-        self.decoder3 = UpConv3DBlock(bottleneck_channel, level_channels[2])
-        self.decoder2 = UpConv3DBlock(level_channels[2], level_channels[1])
-        self.decoder1 = UpConv3DBlock(level_channels[1], level_channels[0], last_layer=True)
+        self.decoder3 = UpConv3DBlock(bottleneck_channel, level_channels[2], apply_transformer=False)
+        self.decoder2 = UpConv3DBlock(level_channels[2], level_channels[1], apply_transformer=False)
+        self.decoder1 = UpConv3DBlock(level_channels[1], level_channels[0], apply_transformer=False, last_layer=True)
 
     def forward(self, x):
         residual = x  # Save input for residual connection

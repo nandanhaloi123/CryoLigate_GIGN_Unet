@@ -3,7 +3,8 @@
 import os
 import sys
 import joblib
-os.environ['CUDA_VISIBLE_DEVICES'] = "0"
+#os.environ['CUDA_VISIBLE_DEVICES'] = "0"
+os.environ['PYTORCH_CUDA_ALLOC_CONF'] = 'expandable_segments:True'
 import torch
 torch.cuda.empty_cache()
 import torch.nn as nn
@@ -14,9 +15,9 @@ from datetime import datetime, timezone
 from sklearn.metrics import mean_squared_error
 from sklearn.model_selection import KFold
 import torch.distributed as dist
+import torch.multiprocessing as mp
 from torch.nn.parallel import DistributedDataParallel as DDP
 from torch.utils.data import DistributedSampler
-
 
 # append repo path to sys for convenient imports
 sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
@@ -144,7 +145,7 @@ if __name__ == '__main__':
     valid_df = toy_df.iloc[val_idx]
 
     # clear name for the model (to distinguish in the future)
-    model_name = f"k_{k}_Unet3D_transformer_each_ED_with_Ligand_embeddings_Hybrid_loss_Norm_minmax_maps_Forward_model_bad_nconfs3_to_Good_res2.0_Batchsize_{batch_size}_lr_{lr:.1e}_wd_{wd:.1e}"
+    model_name = f"k_{k}_Unet3D_transformer_multiGPU_with_Ligand_embeddings_Hybrid_loss_Norm_minmax_maps_Forward_model_bad_nconfs3_to_Good_res2.0_Batchsize_{batch_size}_lr_{lr:.1e}_wd_{wd:.1e}"
     args["model_name"] = model_name
 
     # find and read training and validation data
@@ -184,6 +185,10 @@ if __name__ == '__main__':
                 log_path=dataset_log_path,
             )
     
+    dist.init_process_group(backend="nccl")
+    local_rank = int(os.environ["LOCAL_RANK"])  # Needed for multi-GPU execution
+    torch.cuda.set_device(local_rank)
+    
     train_sampler = DistributedSampler(train_set)
     valid_sampler = DistributedSampler(valid_set)
     
@@ -205,13 +210,11 @@ if __name__ == '__main__':
     
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     # Initialize distributed training
-    dist.init_process_group(backend="nccl")
-    local_rank = int(os.environ["LOCAL_RANK"])  # Needed for multi-GPU execution
-    torch.cuda.set_device(local_rank)
+    
 
     
     model = CryoLigate().to(local_rank)
-    model = DDP(model, device_ids=[local_rank], output_device=local_rank)  
+    model = DDP(model, device_ids=[local_rank], output_device=local_rank, find_unused_parameters=True)  
     optimizer = optim.Adam(model.parameters(), lr=lr, weight_decay=wd)
 
     # specify losses and the objects to track train losses

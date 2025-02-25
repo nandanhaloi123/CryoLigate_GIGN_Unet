@@ -13,7 +13,7 @@ def create_dir(dir_list):
     assert  isinstance(dir_list, list) == True
     for d in dir_list:
         if not os.path.exists(d):
-            os.makedirs(d)
+            os.makedirs(d, exist_ok=True)
 
 class TrainLogger(BasicLogger):
     def __init__(self, args, config, create=True):
