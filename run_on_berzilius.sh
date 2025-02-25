@@ -10,6 +10,6 @@
 
 #SBATCH -o slurm-%j.log
 
-python Training/train_Unet3D_transformer_VAE_GAN.py
+python Training/train_Unet3D_transformer_CVAE.py
 #torchrun --nproc_per_node=8 Training/train_Unet3D_transformer_VAE_GAN.py
-EOF
+

@@ -3,7 +3,7 @@
 import os
 import sys
 import joblib
-#os.environ['CUDA_VISIBLE_DEVICES'] = "0"
+os.environ['CUDA_VISIBLE_DEVICES'] = "0"
 import torch
 torch.cuda.empty_cache()
 import torch.nn as nn
@@ -19,8 +19,7 @@ from sklearn.model_selection import KFold
 sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 
 from utils import AverageMeter
-from model.Unet3D_transformer_VAE_GAN import CryoLigateVAE
-from model.Unet3D_transformer_VAE_GAN import Discriminator3D
+from model.Unet3D_transformer_CVAE import CryoLigateCVAE
 from data_generation.generate_dataset import NetworkDataset, PLIDataLoader
 from config.config_dict import Config
 from log.train_logger import TrainLogger
@@ -93,7 +92,7 @@ if __name__ == '__main__':
     epochs = 500
     lr = 5e-4
     wd = 1e-4
-    lamd = 0.3
+
     # data paths
     data_root = '/proj/berzelius-2022-haloi/users/x_nanha'
     toy_dir = os.path.join(data_root, 'PDBBind_Zenodo_6408497')
@@ -109,7 +108,7 @@ if __name__ == '__main__':
     valid_df = toy_df.iloc[val_idx]
 
     # clear name for the model (to distinguish in the future)
-    model_name = f"k_{k}_Unet3D_transformer_VAE_GAN_{lamd}_with_Ligand_embeddings_Hybrid_loss_Norm_minmax_maps_Forward_model_bad_nconfs3_to_Good_res2.0_Batchsize_{batch_size}_lr_{lr:.1e}_wd_{wd:.1e}"
+    model_name = f"k_{k}_Unet3D_transformer_CVAE_with_Ligand_embeddings_Hybrid_loss_Norm_minmax_maps_Forward_model_bad_nconfs3_to_Good_res2.0_Batchsize_{batch_size}_lr_{lr:.1e}_wd_{wd:.1e}"
     args["model_name"] = model_name
 
     # find and read training and validation data
@@ -149,7 +148,7 @@ if __name__ == '__main__':
                 log_path=dataset_log_path,
             )
     train_loader = PLIDataLoader(train_set, batch_size=batch_size, shuffle=False, drop_last=True)
-    valid_loader = PLIDataLoader(valid_set, batch_size=batch_size, shuffle=False, num_workers=0)
+    valid_loader = PLIDataLoader(valid_set, batch_size=batch_size, shuffle=False, num_workers=4)
     
     # logging some initial information
     logger = TrainLogger(args, cfg, create=True)
@@ -161,20 +160,16 @@ if __name__ == '__main__':
 
     # specify the model and optimizer
     # device = torch.device('cuda:0')
+    model = CryoLigateCVAE()
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    model = CryoLigateVAE().to(device)
-    discriminator = Discriminator3D().to(device)
-
     if torch.cuda.device_count() > 1:
+        print(f"Using {torch.cuda.device_count()} GPUs!")
         model = nn.DataParallel(model)
-        discriminator = nn.DataParallel(discriminator)
+    model = model.to(device)    
+    optimizer = optim.Adam(model.parameters(), lr=lr, weight_decay=wd)
 
-    optimizer_G = optim.Adam(model.parameters(), lr=lr, weight_decay=wd)
-    optimizer_D = optim.Adam(discriminator.parameters(), lr=lr, weight_decay=wd)
-
+    # specify losses and the objects to track train losses
     criterion = CustomLoss()
-    adversarial_loss = nn.BCELoss()  # Binary Cross-Entropy for GAN
-
     val_criterion = CustomLoss()
     train_loss_mse = AverageMeter()
     train_loss_kl = AverageMeter()
@@ -189,7 +184,6 @@ if __name__ == '__main__':
     best_val_loss = 10000000 # initial value of the best validation loss (should be high for the proper model saving)
 
     model.train()
-    discriminator.train()
     for epoch in range(epochs):
         for data in train_loader:
             data = data.to(device)
@@ -199,43 +193,40 @@ if __name__ == '__main__':
             print("PRED", pred.size())
             print("LABEL", label.size())
 
-            # ===== Train Discriminator =====
-            optimizer_D.zero_grad()
+            # Compute loss with the modified loss function
+            loss = criterion(pred, label, mu, logvar)
+            optimizer.zero_grad()
+            loss.backward()
+            optimizer.step()
 
-            real_labels = torch.ones(label.size(0), 1, device=device)
-            fake_labels = torch.zeros(label.size(0), 1, device=device)
-
-            real_preds = discriminator(label)  # Discriminator on real data
-            fake_preds = discriminator(pred.detach())  # Discriminator on fake data (no gradient for generator)
-
-            loss_real = adversarial_loss(real_preds, real_labels)
-            loss_fake = adversarial_loss(fake_preds, fake_labels)
-            loss_D = (loss_real + loss_fake) / 2
-            loss_D.backward()
-            optimizer_D.step()
-            
-            # ===== Train Generator (VAE) =====
-            optimizer_G.zero_grad()
-
-            vae_loss = criterion(pred, label, mu, logvar)
-            fake_preds = discriminator(pred)  # Get discriminator's opinion on generated data
-
-            loss_G = vae_loss + lamd * adversarial_loss(fake_preds, real_labels)  # Adversarial loss encourages realism
-            loss_G.backward()
-            optimizer_G.step()
+            # compute and store training losses
+            train_mse, train_kl = criterion.separate_losses(pred, label, mu, logvar)
+            train_loss_mse.update(train_mse, label.size(0))
+            train_loss_kl.update(train_kl, label.size(0))
         
-        # Validation
-        epoch_val_mse, epoch_val_kl = val(model, valid_loader, device, criterion)
-        total_val_loss = epoch_val_mse + epoch_val_kl
+        # average train loss
+        epoch_train_mse = train_loss_mse.get_average()
+        train_loss_mse.reset()
+        epoch_train_kl = train_loss_kl.get_average()
+        train_loss_kl.reset()
+        
+        # average validation loss
+        epoch_val_mse, epoch_val_kl = val(model, valid_loader, device, val_criterion)
+        total_val_loss = epoch_val_mse + epoch_val_kl 
 
-        # Logging
-        msg = f"Epoch-{epoch}, Loss_G: {loss_G.item():.7f}, Loss_D: {loss_D.item():.7f}, Val_MSE: {epoch_val_mse:.7f}, Val_KL: {epoch_val_kl:.7f}"
+        # log training information: epochs, losses etc
+        msg = "epoch-%d, train_mse_loss-%.7f, train_kl_loss-%.7f, val_mse_loss-%.7f, val_kl_loss-%.7f" \
+        % (epoch, epoch_train_mse , epoch_train_kl, epoch_val_mse, epoch_val_kl)
         logger.info(msg)
 
-        # Save Best Model
-        if total_val_loss < best_val_loss:
+
+        # save the model on the current epoch if it outperforms previous best epoch
+        if (epoch >= 2) and (total_val_loss < best_val_loss):
             model_dir = logger.get_model_dir()
             model_pkl_file = os.path.join(model_dir, f"model_{epoch}.pkl")
             joblib.dump(model, model_pkl_file)
             best_val_loss = total_val_loss
-            logger.info(f"Saved new best model at epoch {epoch} with validation loss {best_val_loss:.7f}")
+
+            msg = "Saved new best model at epoch %d with validation loss %.7f" \
+            % (epoch, best_val_loss)
+            logger.info(msg)
