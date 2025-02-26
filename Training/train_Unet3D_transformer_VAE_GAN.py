@@ -93,7 +93,7 @@ if __name__ == '__main__':
     epochs = 500
     lr = 5e-4
     wd = 1e-4
-    lamd = 0.3
+    lamd = 0.1
     # data paths
     data_root = '/proj/berzelius-2022-haloi/users/x_nanha'
     toy_dir = os.path.join(data_root, 'PDBBind_Zenodo_6408497')
@@ -161,13 +161,13 @@ if __name__ == '__main__':
 
     # specify the model and optimizer
     # device = torch.device('cuda:0')
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     model = CryoLigateVAE().to(device)
     discriminator = Discriminator3D().to(device)
 
-    if torch.cuda.device_count() > 1:
-        model = nn.DataParallel(model)
-        discriminator = nn.DataParallel(discriminator)
+    # if torch.cuda.device_count() > 1:
+    #     model = nn.DataParallel(model)
+    #     discriminator = nn.DataParallel(discriminator)
 
     optimizer_G = optim.Adam(model.parameters(), lr=lr, weight_decay=wd)
     optimizer_D = optim.Adam(discriminator.parameters(), lr=lr, weight_decay=wd)
@@ -190,52 +190,50 @@ if __name__ == '__main__':
 
     model.train()
     discriminator.train()
-    for epoch in range(epochs):
-        for data in train_loader:
-            data = data.to(device)
-            print("Data size", data.size())
-            pred, mu, logvar = model(data)
-            label = data.y
-            print("PRED", pred.size())
-            print("LABEL", label.size())
+    # ===== Train Loop =====
+for epoch in range(epochs):
+    for data in train_loader:
+        data = data.to(device)  # Move input data to the same device for both models
+        pred, mu, logvar = model(data)  # Generate predictions
+        label = data.y.to(device)  # Move label to the same device for discriminator
 
-            # ===== Train Discriminator =====
-            optimizer_D.zero_grad()
+        # ===== Train Discriminator =====
+        optimizer_D.zero_grad()
 
-            real_labels = torch.ones(label.size(0), 1, device=device)
-            fake_labels = torch.zeros(label.size(0), 1, device=device)
+        real_labels = torch.ones(label.size(0), 1, device=device)
+        fake_labels = torch.zeros(label.size(0), 1, device=device)
 
-            real_preds = discriminator(label)  # Discriminator on real data
-            fake_preds = discriminator(pred.detach())  # Discriminator on fake data (no gradient for generator)
+        real_preds = discriminator(label)  # Discriminator on real data
+        fake_preds = discriminator(pred.detach())  # Discriminator on fake data (no gradient for generator)
 
-            loss_real = adversarial_loss(real_preds, real_labels)
-            loss_fake = adversarial_loss(fake_preds, fake_labels)
-            loss_D = (loss_real + loss_fake) / 2
-            loss_D.backward()
-            optimizer_D.step()
-            
-            # ===== Train Generator (VAE) =====
-            optimizer_G.zero_grad()
+        loss_real = adversarial_loss(real_preds, real_labels)
+        loss_fake = adversarial_loss(fake_preds, fake_labels)
+        loss_D = (loss_real + loss_fake) / 2
+        loss_D.backward()
+        optimizer_D.step()
 
-            vae_loss = criterion(pred, label, mu, logvar)
-            fake_preds = discriminator(pred)  # Get discriminator's opinion on generated data
+        # ===== Train Generator (VAE) =====
+        optimizer_G.zero_grad()
 
-            loss_G = vae_loss + lamd * adversarial_loss(fake_preds, real_labels)  # Adversarial loss encourages realism
-            loss_G.backward()
-            optimizer_G.step()
-        
-        # Validation
-        epoch_val_mse, epoch_val_kl = val(model, valid_loader, device, criterion)
-        total_val_loss = epoch_val_mse + epoch_val_kl
+        vae_loss = criterion(pred, label, mu, logvar)
+        fake_preds = discriminator(pred)  # Get discriminator's opinion on generated data
 
-        # Logging
-        msg = f"Epoch-{epoch}, Loss_G: {loss_G.item():.7f}, Loss_D: {loss_D.item():.7f}, Val_MSE: {epoch_val_mse:.7f}, Val_KL: {epoch_val_kl:.7f}"
-        logger.info(msg)
+        loss_G = vae_loss + lamd * adversarial_loss(fake_preds, real_labels)  # Adversarial loss encourages realism
+        loss_G.backward()
+        optimizer_G.step()
 
-        # Save Best Model
-        if total_val_loss < best_val_loss:
-            model_dir = logger.get_model_dir()
-            model_pkl_file = os.path.join(model_dir, f"model_{epoch}.pkl")
-            joblib.dump(model, model_pkl_file)
-            best_val_loss = total_val_loss
-            logger.info(f"Saved new best model at epoch {epoch} with validation loss {best_val_loss:.7f}")
+    # Validation
+    epoch_val_mse, epoch_val_kl = val(model, valid_loader, device, criterion)  # Ensure val uses the same device
+    total_val_loss = epoch_val_mse + epoch_val_kl
+
+    # Logging
+    msg = f"Epoch-{epoch}, Loss_G: {loss_G.item():.7f}, Loss_D: {loss_D.item():.7f}, Val_MSE: {epoch_val_mse:.7f}, Val_KL: {epoch_val_kl:.7f}"
+    logger.info(msg)
+
+    # Save Best Model
+    if total_val_loss < best_val_loss:
+        model_dir = logger.get_model_dir()
+        model_pkl_file = os.path.join(model_dir, f"model_{epoch}.pkl")
+        joblib.dump(model, model_pkl_file)
+        best_val_loss = total_val_loss
+        logger.info(f"Saved new best model at epoch {epoch} with validation loss {best_val_loss:.7f}")

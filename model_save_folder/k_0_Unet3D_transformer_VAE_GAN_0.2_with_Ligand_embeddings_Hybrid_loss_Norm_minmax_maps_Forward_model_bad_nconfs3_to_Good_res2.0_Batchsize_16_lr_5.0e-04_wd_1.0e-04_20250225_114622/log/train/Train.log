@@ -1,0 +1,25 @@
+2025-02-25 11:46:22 - INFO - train data: 13259
+2025-02-25 11:46:22 - INFO - train unqiue data: 13259
+2025-02-25 11:46:22 - INFO - valid data: 1474
+2025-02-25 11:46:22 - INFO - valid unqiue data: 1474
+2025-02-25 11:50:06 - INFO - Epoch-0, Loss_G: 40.2038422, Loss_D: 0.0487702, Val_MSE: 0.0005795, Val_KL: 24471090464.0678482
+2025-02-25 11:53:45 - INFO - Epoch-1, Loss_G: 40.6246910, Loss_D: 0.0008584, Val_MSE: 0.0005795, Val_KL: 39.1778671
+2025-02-25 11:53:51 - INFO - Saved new best model at epoch 1 with validation loss 39.1784466
+2025-02-25 11:57:30 - INFO - Epoch-2, Loss_G: 51.9911156, Loss_D: 0.0032814, Val_MSE: 0.0005795, Val_KL: 692153402863661770342400.0000000
+2025-02-25 12:01:09 - INFO - Epoch-3, Loss_G: 38.6640472, Loss_D: 0.0000293, Val_MSE: 0.0005795, Val_KL: 36.0900468
+2025-02-25 12:01:15 - INFO - Saved new best model at epoch 3 with validation loss 36.0906262
+2025-02-25 12:04:54 - INFO - Epoch-4, Loss_G: 21.8920822, Loss_D: 0.0000104, Val_MSE: 0.0005795, Val_KL: 19.0892523
+2025-02-25 12:05:00 - INFO - Saved new best model at epoch 4 with validation loss 19.0898317
+2025-02-25 12:08:39 - INFO - Epoch-5, Loss_G: 5.9954834, Loss_D: 0.0001365, Val_MSE: 0.0005795, Val_KL: 4.2517976
+2025-02-25 12:08:45 - INFO - Saved new best model at epoch 5 with validation loss 4.2523771
+2025-02-25 12:12:24 - INFO - Epoch-6, Loss_G: 4.1337051, Loss_D: 0.0000384, Val_MSE: 0.0005795, Val_KL: 2.2022064
+2025-02-25 12:12:30 - INFO - Saved new best model at epoch 6 with validation loss 2.2027858
+2025-02-25 12:16:09 - INFO - Epoch-7, Loss_G: 3.2917628, Loss_D: 0.0000569, Val_MSE: 0.0005795, Val_KL: 1.4740013
+2025-02-25 12:16:16 - INFO - Saved new best model at epoch 7 with validation loss 1.4745808
+2025-02-25 12:19:54 - INFO - Epoch-8, Loss_G: 3.1234982, Loss_D: 0.0000210, Val_MSE: 0.0005795, Val_KL: 1.1349966
+2025-02-25 12:20:01 - INFO - Saved new best model at epoch 8 with validation loss 1.1355761
+2025-02-25 12:23:39 - INFO - Epoch-9, Loss_G: 16.5349464, Loss_D: 0.0000000, Val_MSE: 0.0005795, Val_KL: 13.0250478
+2025-02-25 12:27:18 - INFO - Epoch-10, Loss_G: 8.2507677, Loss_D: 0.0000077, Val_MSE: 0.0005795, Val_KL: 6.0360638
+2025-02-25 12:30:56 - INFO - Epoch-11, Loss_G: 59.9896889, Loss_D: 0.0000018, Val_MSE: 0.0005795, Val_KL: 56.2726507
+2025-02-25 12:34:35 - INFO - Epoch-12, Loss_G: 23.2913189, Loss_D: 0.0000004, Val_MSE: 0.0005795, Val_KL: 20.5329284
+2025-02-25 12:38:13 - INFO - Epoch-13, Loss_G: 8.9625320, Loss_D: 0.0000000, Val_MSE: 0.0012663, Val_KL: 2.1374863

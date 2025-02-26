@@ -181,43 +181,6 @@ class UNet3DTransformerVAE(nn.Module):
         x = self.decoder1(x, res1)
         return x, mu, logvar
 
-
-# %%
-import os
-import sys
-import joblib
-import torch
-import torch.nn as nn
-import torch.optim as optim
-import pandas as pd
-import numpy as np
-from datetime import datetime, timezone
-from sklearn.model_selection import KFold
-
-# Append repo path for convenient imports
-sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
-
-from utils import AverageMeter
-from model.Unet3D_transformer_VAE import CryoLigateVAE
-from data_generation.generate_dataset import NetworkDataset, PLIDataLoader
-from config.config_dict import Config
-from log.train_logger import TrainLogger
-
-# Custom Loss for VAE
-class CustomLoss(nn.Module):
-    def __init__(self):
-        super(CustomLoss, self).__init__()
-
-    def forward(self, inputs, targets, mu, logvar):
-        mse_loss = ((inputs - targets) ** 2).mean()
-        kl_loss = -0.5 * torch.mean(1 + logvar - mu.pow(2) - logvar.exp())
-        return mse_loss + kl_loss
-    
-    def separate_losses(self, inputs, targets, mu, logvar):
-        mse_loss = ((inputs - targets) ** 2).mean()
-        kl_loss = -0.5 * torch.mean(1 + logvar - mu.pow(2) - logvar.exp())
-        return mse_loss.item(), kl_loss.item()
-
 # Discriminator Model (for GAN)
 class Discriminator3D(nn.Module):
     def __init__(self):
