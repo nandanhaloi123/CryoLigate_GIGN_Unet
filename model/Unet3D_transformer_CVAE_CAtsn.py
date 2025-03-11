@@ -137,6 +137,31 @@ class UpConv3DBlock(nn.Module):
         x = self.attention(x)
         return self.conv3(x) if self.last_layer else x
 
+
+class CrossAttention(nn.Module):
+    def __init__(self, embed_dim, feature_dim, num_heads=8):
+        super().__init__()
+        self.query_proj = nn.Linear(feature_dim, embed_dim)  # Project bottleneck features
+        self.key_proj = nn.Linear(embed_dim, embed_dim)      # Project ligand embedding
+        self.value_proj = nn.Linear(embed_dim, embed_dim)    # Value projection for ligand
+        self.multihead_attn = nn.MultiheadAttention(embed_dim, num_heads)
+        self.norm = nn.LayerNorm(embed_dim)
+
+    def forward(self, bottleneck_features, ligand_embedding):
+        """
+        bottleneck_features: (batch, feature_dim)
+        ligand_embedding: (batch, embed_dim)
+        """
+        query = self.query_proj(bottleneck_features).unsqueeze(0)  # (1, batch, embed_dim)
+        key = self.key_proj(ligand_embedding).unsqueeze(0)  # (1, batch, embed_dim)
+        value = self.value_proj(ligand_embedding).unsqueeze(0)  # (1, batch, embed_dim)
+
+        attn_output, _ = self.multihead_attn(query, key, value)
+        attn_output = self.norm(attn_output.squeeze(0))  # Back to (batch, embed_dim)
+
+        return attn_output
+
+
 # 3D UNet with Transformer and Attention
 class UNet3DTransformerCVAE(nn.Module):
     def __init__(self, in_channels=2, level_channels=[64, 128, 256], bottleneck_channel=512, latent_dim=256, embedding_dim=768):
@@ -145,18 +170,21 @@ class UNet3DTransformerCVAE(nn.Module):
         self.encoder2 = Conv3DBlock(level_channels[0], level_channels[1])
         self.encoder3 = Conv3DBlock(level_channels[1], level_channels[2])
         self.bottleneck = Conv3DBlock(level_channels[2], bottleneck_channel, bottleneck=True)
-        
+
         # Conditioning mechanism for ligand embedding
         self.embed_fc = nn.Linear(embedding_dim, latent_dim)
-        self.fc_mu = nn.Linear(bottleneck_channel * 6 * 6 * 6 + latent_dim, latent_dim)
-        self.fc_logvar = nn.Linear(bottleneck_channel * 6 * 6 * 6 + latent_dim, latent_dim)
+        self.cross_attn = CrossAttention(embed_dim=embedding_dim, feature_dim=bottleneck_channel * 6 * 6 * 6)
+
+        self.fc_mu = nn.Linear(embedding_dim, latent_dim)
+        self.fc_logvar = nn.Linear(embedding_dim, latent_dim)
         self.fc_decode = nn.Linear(latent_dim + latent_dim, bottleneck_channel * 6 * 6 * 6)
-        
+
         self.transformer = Transformer3D(bottleneck_channel, num_heads=8, mlp_dim=1024)
         
         self.decoder3 = UpConv3DBlock(bottleneck_channel, level_channels[2])
         self.decoder2 = UpConv3DBlock(level_channels[2], level_channels[1])
         self.decoder1 = UpConv3DBlock(level_channels[1], level_channels[0], last_layer=True)
+
     
     def reparameterize(self, mu, logvar):
         std = torch.exp(0.5 * logvar)
@@ -168,19 +196,23 @@ class UNet3DTransformerCVAE(nn.Module):
         x, res2 = self.encoder2(x)
         x, res3 = self.encoder3(x)
         x, _ = self.bottleneck(x)
-        
-        x_flat = x.view(x.size(0), -1)
+
+        x_flat = x.view(x.size(0), -1)  # Flatten the bottleneck feature map
+
+        # Pass ligand_embedding through attention mechanism
         ligand_embed = self.embed_fc(ligand_embedding)
-        
-        x_cat = torch.cat([x_flat, ligand_embed], dim=-1)
-        mu = self.fc_mu(x_cat)
-        logvar = self.fc_logvar(x_cat)
+        attended_features = self.cross_attn(x_flat, ligand_embedding)  # Cross-Attention
+
+        # Use attended features for mu and logvar
+        mu = self.fc_mu(attended_features)
+        logvar = self.fc_logvar(attended_features)
         z = self.reparameterize(mu, logvar)
-        
+
+        # Decode using both z and ligand embedding
         z_cat = torch.cat([z, ligand_embed], dim=-1)
         x = self.fc_decode(z_cat).view(x.size(0), -1, 6, 6, 6)
         x = self.transformer(x)
-        
+
         x = self.decoder3(x, res3)
         x = self.decoder2(x, res2)
         x = self.decoder1(x, res1)
