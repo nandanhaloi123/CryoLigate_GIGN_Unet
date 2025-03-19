@@ -1,0 +1,20 @@
+2025-03-19 14:27:58 - INFO - train data: 13259
+2025-03-19 14:27:58 - INFO - train unqiue data: 13259
+2025-03-19 14:27:58 - INFO - valid data: 1474
+2025-03-19 14:27:58 - INFO - valid unqiue data: 1474
+2025-03-19 14:32:46 - INFO - epoch-0, train_mse_loss-0.0007937, train_kl_loss-0.0017911, val_mse_loss-0.0037204, val_kl_loss-0.0000181
+2025-03-19 14:37:06 - INFO - epoch-1, train_mse_loss-0.0003453, train_kl_loss-0.0000041, val_mse_loss-0.0040510, val_kl_loss-0.0000002
+2025-03-19 14:41:27 - INFO - epoch-2, train_mse_loss-0.0003387, train_kl_loss-0.0000000, val_mse_loss-0.0056297, val_kl_loss-0.0000000
+2025-03-19 14:41:34 - INFO - Saved new best model at epoch 2 with validation loss 0.0056297
+2025-03-19 14:45:55 - INFO - epoch-3, train_mse_loss-0.0003347, train_kl_loss-0.0000000, val_mse_loss-0.0034132, val_kl_loss--0.0000000
+2025-03-19 14:46:02 - INFO - Saved new best model at epoch 3 with validation loss 0.0034132
+2025-03-19 14:50:23 - INFO - epoch-4, train_mse_loss-0.0003344, train_kl_loss--0.0000000, val_mse_loss-0.0027554, val_kl_loss-0.0000000
+2025-03-19 14:50:30 - INFO - Saved new best model at epoch 4 with validation loss 0.0027554
+2025-03-19 14:54:50 - INFO - epoch-5, train_mse_loss-0.0003337, train_kl_loss--0.0000000, val_mse_loss-0.0008823, val_kl_loss-0.0000000
+2025-03-19 14:54:58 - INFO - Saved new best model at epoch 5 with validation loss 0.0008823
+2025-03-19 14:59:19 - INFO - epoch-6, train_mse_loss-0.0003361, train_kl_loss--0.0000000, val_mse_loss-0.0003598, val_kl_loss-0.0000000
+2025-03-19 14:59:27 - INFO - Saved new best model at epoch 6 with validation loss 0.0003598
+2025-03-19 15:03:46 - INFO - epoch-7, train_mse_loss-0.0003336, train_kl_loss-0.0000000, val_mse_loss-0.0003577, val_kl_loss-0.0000000
+2025-03-19 15:03:54 - INFO - Saved new best model at epoch 7 with validation loss 0.0003577
+2025-03-19 15:08:14 - INFO - epoch-8, train_mse_loss-0.0003339, train_kl_loss-0.0000000, val_mse_loss-0.0003533, val_kl_loss-0.0000000
+2025-03-19 15:08:21 - INFO - Saved new best model at epoch 8 with validation loss 0.0003533

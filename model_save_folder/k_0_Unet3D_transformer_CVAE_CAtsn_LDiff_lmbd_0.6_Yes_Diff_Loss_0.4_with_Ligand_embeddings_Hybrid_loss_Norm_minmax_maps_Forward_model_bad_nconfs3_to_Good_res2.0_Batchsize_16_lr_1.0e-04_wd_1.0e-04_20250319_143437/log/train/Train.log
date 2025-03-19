@@ -1,0 +1,16 @@
+2025-03-19 14:34:37 - INFO - train data: 13259
+2025-03-19 14:34:37 - INFO - train unqiue data: 13259
+2025-03-19 14:34:37 - INFO - valid data: 1474
+2025-03-19 14:34:37 - INFO - valid unqiue data: 1474
+2025-03-19 14:39:01 - INFO - epoch-0, train_mse_loss-0.0003687, train_kl_loss-0.0027690, train_diff_loss-0.9155953, val_mse_loss-0.0010318, val_kl_loss-0.0010897, val_diff_loss-0.8056278
+2025-03-19 14:43:19 - INFO - epoch-1, train_mse_loss-0.0003342, train_kl_loss-0.0014964, train_diff_loss-0.7212666, val_mse_loss-0.0015112, val_kl_loss-0.0017575, val_diff_loss-0.6513019
+2025-03-19 14:47:37 - INFO - epoch-2, train_mse_loss-0.0003345, train_kl_loss-0.0025720, train_diff_loss-0.5860150, val_mse_loss-0.0009691, val_kl_loss-0.0033134, val_diff_loss-0.5472963
+2025-03-19 14:47:45 - INFO - Saved new best model at epoch 2 with validation loss 0.5515788
+2025-03-19 14:52:03 - INFO - epoch-3, train_mse_loss-0.0003599, train_kl_loss-0.0039638, train_diff_loss-0.4992102, val_mse_loss-0.0005616, val_kl_loss-0.0040082, val_diff_loss-0.4718391
+2025-03-19 14:52:11 - INFO - Saved new best model at epoch 3 with validation loss 0.4764089
+2025-03-19 14:56:29 - INFO - epoch-4, train_mse_loss-0.0004016, train_kl_loss-0.0053602, train_diff_loss-0.4421189, val_mse_loss-0.0003569, val_kl_loss-0.0070628, val_diff_loss-0.4320103
+2025-03-19 14:56:37 - INFO - Saved new best model at epoch 4 with validation loss 0.4394299
+2025-03-19 15:00:55 - INFO - epoch-5, train_mse_loss-0.0003330, train_kl_loss-0.0066112, train_diff_loss-0.4143798, val_mse_loss-0.0004422, val_kl_loss-0.0084504, val_diff_loss-0.3976659
+2025-03-19 15:01:03 - INFO - Saved new best model at epoch 5 with validation loss 0.4065584
+2025-03-19 15:05:21 - INFO - epoch-6, train_mse_loss-0.0003307, train_kl_loss-0.0073583, train_diff_loss-0.3934137, val_mse_loss-0.0004944, val_kl_loss-0.0080963, val_diff_loss-0.3856565
+2025-03-19 15:05:28 - INFO - Saved new best model at epoch 6 with validation loss 0.3942472
