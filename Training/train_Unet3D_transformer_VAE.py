@@ -30,7 +30,7 @@ class CustomLoss(nn.Module):
     def __init__(self):
         super(CustomLoss, self).__init__()
 
-    def forward(self, inputs, targets, mu, logvar):
+    def forward(self, inputs, targets, mu, logvar, lmbd):
         """
         Computes the combined loss: reconstruction loss + KL divergence
         """
@@ -39,10 +39,11 @@ class CustomLoss(nn.Module):
 
         # KL Divergence (for VAE)
         # Compute the KL divergence using mu and logvar
+        logvar = torch.clamp(logvar, min=-10, max=10)
         kl_loss = -0.5 * torch.mean(1 + logvar - mu.pow(2) - logvar.exp())
 
         # Total loss (MSE + KL divergence)
-        return mse_loss + kl_loss
+        return mse_loss + lmbd*kl_loss
     
     def separate_losses(self, inputs, targets, mu, logvar):
         """
@@ -52,6 +53,7 @@ class CustomLoss(nn.Module):
         mse_loss = ((inputs - targets) ** 2).mean()
 
         # Compute KL divergence
+        logvar = torch.clamp(logvar, min=-10, max=10)
         kl_loss = -0.5 * torch.mean(1 + logvar - mu.pow(2) - logvar.exp())
         
         return mse_loss.item(), kl_loss.item()
@@ -90,9 +92,9 @@ if __name__ == '__main__':
     args = config.get_config()
     batch_size = 16
     epochs = 500
-    lr = 5e-4
+    lr = 1e-4
     wd = 1e-4
-
+    lmbd = 0.9
     # data paths
     data_root = '/proj/berzelius-2022-haloi/users/x_nanha'
     toy_dir = os.path.join(data_root, 'PDBBind_Zenodo_6408497')
@@ -108,7 +110,7 @@ if __name__ == '__main__':
     valid_df = toy_df.iloc[val_idx]
 
     # clear name for the model (to distinguish in the future)
-    model_name = f"k_{k}_Unet3D_transformer_VAE_with_Ligand_embeddings_Hybrid_loss_Norm_minmax_maps_Forward_model_bad_nconfs3_to_Good_res2.0_Batchsize_{batch_size}_lr_{lr:.1e}_wd_{wd:.1e}"
+    model_name = f"k_{k}_Unet3D_transformer_VAE_lmbd_{lmbd}_with_Ligand_embeddings_Hybrid_loss_Norm_minmax_maps_Forward_model_bad_nconfs3_to_Good_res2.0_Batchsize_{batch_size}_lr_{lr:.1e}_wd_{wd:.1e}"
     args["model_name"] = model_name
 
     # find and read training and validation data
@@ -194,7 +196,7 @@ if __name__ == '__main__':
             print("LABEL", label.size())
 
             # Compute loss with the modified loss function
-            loss = criterion(pred, label, mu, logvar)
+            loss = criterion(pred, label, mu, logvar, lmbd)
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()

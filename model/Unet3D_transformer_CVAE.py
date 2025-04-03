@@ -12,6 +12,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 class CryoLigateCVAE(nn.Module):
     def __init__(self):
         super().__init__()
+        
         output_shape = (1, 48, 48, 48)
         embedding_size = 768
         latent_dim = 256  # Latent space dimension
