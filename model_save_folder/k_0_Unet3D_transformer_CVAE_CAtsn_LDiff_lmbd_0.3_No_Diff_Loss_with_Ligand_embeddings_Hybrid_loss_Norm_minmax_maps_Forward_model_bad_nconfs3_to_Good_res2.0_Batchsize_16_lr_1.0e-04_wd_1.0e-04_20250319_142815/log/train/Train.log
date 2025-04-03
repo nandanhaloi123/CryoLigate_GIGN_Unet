@@ -13,6 +13,7 @@
 2025-03-19 14:59:17 - INFO - Saved new best model at epoch 6 with validation loss 0.0003326
 2025-03-19 15:03:35 - INFO - epoch-7, train_mse_loss-0.0003342, train_kl_loss--0.0000000, val_mse_loss-0.0003733, val_kl_loss--0.0000000
 2025-03-19 15:07:53 - INFO - epoch-8, train_mse_loss-0.0003345, train_kl_loss--0.0000000, val_mse_loss-0.0004124, val_kl_loss-0.0000000
+<<<<<<< HEAD
 2025-03-19 15:12:12 - INFO - epoch-9, train_mse_loss-0.0003421, train_kl_loss-0.0000000, val_mse_loss-0.0004209, val_kl_loss-0.0000000
 2025-03-19 15:16:29 - INFO - epoch-10, train_mse_loss-0.0003332, train_kl_loss-0.0000000, val_mse_loss-0.0004166, val_kl_loss-0.0000000
 2025-03-19 15:20:47 - INFO - epoch-11, train_mse_loss-0.0003328, train_kl_loss-0.0000000, val_mse_loss-0.0004453, val_kl_loss-0.0000000
@@ -528,3 +529,5 @@
 2025-03-21 02:26:18 - INFO - epoch-497, train_mse_loss-0.0003231, train_kl_loss-0.0000000, val_mse_loss-0.0003264, val_kl_loss-0.0000000
 2025-03-21 02:30:37 - INFO - epoch-498, train_mse_loss-0.0003231, train_kl_loss-0.0000000, val_mse_loss-0.0003265, val_kl_loss-0.0000000
 2025-03-21 02:34:57 - INFO - epoch-499, train_mse_loss-0.0003231, train_kl_loss-0.0000000, val_mse_loss-0.0003264, val_kl_loss-0.0000000
+=======
+>>>>>>> 276e8a8d297e2d3032d43656c072e4505f40cf1d

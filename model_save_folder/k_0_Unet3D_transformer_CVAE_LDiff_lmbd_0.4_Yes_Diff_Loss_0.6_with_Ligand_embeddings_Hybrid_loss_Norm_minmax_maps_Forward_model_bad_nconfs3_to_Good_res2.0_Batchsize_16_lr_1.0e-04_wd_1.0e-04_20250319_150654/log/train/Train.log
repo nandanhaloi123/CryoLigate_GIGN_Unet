@@ -2,6 +2,7 @@
 2025-03-19 15:07:07 - INFO - train unqiue data: 13259
 2025-03-19 15:07:07 - INFO - valid data: 1474
 2025-03-19 15:07:07 - INFO - valid unqiue data: 1474
+<<<<<<< HEAD
 2025-03-19 15:11:51 - INFO - epoch-0, train_mse_loss-0.0003479, train_kl_loss-0.0044632, train_diff_loss-0.9132875, val_mse_loss-0.0003595, val_kl_loss-0.0024560, val_diff_loss-0.8034748
 2025-03-19 15:16:11 - INFO - epoch-1, train_mse_loss-0.0003367, train_kl_loss-0.0048396, train_diff_loss-0.7155250, val_mse_loss-0.0003538, val_kl_loss-0.0072918, val_diff_loss-0.6370381
 2025-03-19 15:20:31 - INFO - epoch-2, train_mse_loss-0.0003343, train_kl_loss-0.0098572, train_diff_loss-0.5734073, val_mse_loss-0.0003354, val_kl_loss-0.0135856, val_diff_loss-0.5115591
@@ -518,3 +519,5 @@
 2025-03-21 03:17:16 - INFO - epoch-497, train_mse_loss-0.0003229, train_kl_loss-0.0469521, train_diff_loss-0.2983176, val_mse_loss-0.0004851, val_kl_loss-0.0458982, val_diff_loss-0.3082616
 2025-03-21 03:21:35 - INFO - epoch-498, train_mse_loss-0.0003229, train_kl_loss-0.0429542, train_diff_loss-0.2888783, val_mse_loss-0.0004652, val_kl_loss-0.0411988, val_diff_loss-0.3018461
 2025-03-21 03:25:54 - INFO - epoch-499, train_mse_loss-0.0003229, train_kl_loss-0.0479987, train_diff_loss-0.3021223, val_mse_loss-0.0004745, val_kl_loss-0.0477430, val_diff_loss-0.2910932
+=======
+>>>>>>> 276e8a8d297e2d3032d43656c072e4505f40cf1d
