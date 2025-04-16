@@ -13,7 +13,8 @@ import numpy as np
 from datetime import datetime, timezone
 from sklearn.metrics import mean_squared_error
 from sklearn.model_selection import KFold
-
+import os
+os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True"
 
 # append repo path to sys for convenient imports
 sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
@@ -31,7 +32,7 @@ class CustomLoss(nn.Module):
         super(CustomLoss, self).__init__()
         self.mse = nn.MSELoss()
 
-    def forward(self, inputs, targets, mu, logvar, lmbd, lmbd2, actual_noise=None, predicted_noise=None):
+    def forward(self, inputs, targets, mu, logvar, alpha, beta, gamma, actual_noise=None, predicted_noise=None):
         """
         Computes the combined loss: reconstruction loss + KL divergence
         """
@@ -47,7 +48,7 @@ class CustomLoss(nn.Module):
         if predicted_noise is not None and actual_noise is not None:
             diffusion_loss = self.mse(predicted_noise, actual_noise)
 
-        return mse_loss + lmbd * kl_loss + lmbd2 * diffusion_loss  # Weight diffusion loss
+        return alpha * mse_loss + beta * kl_loss + gamma * diffusion_loss  # Weight diffusion loss
     
     def separate_losses(self, inputs, targets, mu, logvar, actual_noise, predicted_noise):
         """
@@ -98,6 +99,8 @@ def val(model, dataloader, device, criterion):
 
 if __name__ == '__main__':
 
+    import argparse
+    
     # config for the proper model saving
     cfg = 'TrainConfig_CryoLigate'
     config = Config(cfg)
@@ -106,8 +109,17 @@ if __name__ == '__main__':
     epochs = 500
     lr = 1e-4
     wd = 1e-4
-    lmbd = 0.9
-    lmbd2 = 0.1
+    
+    parser = argparse.ArgumentParser(description="Train CryoLigate model with weighted loss")
+    parser.add_argument('--alpha', type=float, default=1.0, help='Weight for MSE loss')
+    parser.add_argument('--beta', type=float, default=0.9, help='Weight for KL divergence loss')
+    parser.add_argument('--gamma', type=float, default=0.1, help='Weight for diffusion loss')
+    args_cli = parser.parse_args()
+
+    alpha = args_cli.alpha
+    beta = args_cli.beta
+    gamma = args_cli.gamma
+    
     # data paths
     data_root = '/proj/berzelius-2022-haloi/users/x_nanha'
     toy_dir = os.path.join(data_root, 'PDBBind_Zenodo_6408497')
@@ -123,7 +135,7 @@ if __name__ == '__main__':
     valid_df = toy_df.iloc[val_idx]
 
     # clear name for the model (to distinguish in the future)
-    model_name = f"k_{k}_Unet3D_transformer_CVAE_LDiff_lmbd_{lmbd}_Yes_Diff_Loss_{lmbd2}_with_Ligand_embeddings_Hybrid_loss_Norm_minmax_maps_Forward_model_bad_nconfs3_to_Good_res2.0_Batchsize_{batch_size}_lr_{lr:.1e}_wd_{wd:.1e}"
+    model_name = f"k_{k}_Unet3D_transformer_CVAE_LDiff_alpha_{alpha}_beta_{beta}_gamma_{gamma}_with_Ligand_embeddings_Hybrid_loss_Norm_minmax_maps_Forward_model_bad_nconfs3_to_Good_res2.0_Batchsize_{batch_size}_lr_{lr:.1e}_wd_{wd:.1e}"
     args["model_name"] = model_name
 
     # find and read training and validation data
@@ -210,7 +222,7 @@ if __name__ == '__main__':
             print("LABEL", label.size())
 
             # Compute loss with the modified loss function
-            loss = criterion(pred, label, mu, logvar, lmbd, lmbd2, actual_noise, predicted_noise)
+            loss = criterion(pred, label, mu, logvar, alpha, beta, gamma, actual_noise, predicted_noise)
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()

@@ -13,13 +13,14 @@ import numpy as np
 from datetime import datetime, timezone
 from sklearn.metrics import mean_squared_error
 from sklearn.model_selection import KFold
-
+import os
+os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True"
 
 # append repo path to sys for convenient imports
 sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 
 from utils import AverageMeter
-from model.Unet3D_transformer_CVAE import CryoLigateCVAE
+from model.Unet3D_transformer_CVAE_CAtsn_LDiff_wLoss import CryoLigateCVAE
 from data_generation.generate_dataset import NetworkDataset, PLIDataLoader
 from config.config_dict import Config
 from log.train_logger import TrainLogger
@@ -29,63 +30,104 @@ from utils import *
 class CustomLoss(nn.Module):
     def __init__(self):
         super(CustomLoss, self).__init__()
+        self.mse = nn.MSELoss()
 
-    def forward(self, inputs, targets, mu, logvar, alpha, beta):
+    def forward(self, inputs, targets, mu, logvar, alpha, alpha2, beta, gamma, actual_noise=None, predicted_noise=None):
         """
-        Computes the combined loss: reconstruction loss + KL divergence
+        Computes the combined loss: reconstruction loss + SSIM + KL divergence + Diffusion loss
         """
         # Reconstruction loss (MSE)
-        mse_loss = ((inputs - targets) ** 2).mean()
+        mse_loss = self.mse(inputs, targets)
+        
+        # compute SSIM loss
+        epsilon = 1e-6
+        map_shape = inputs.size()
+        n_points = map_shape[2] * map_shape[3] * map_shape[4]
+        inputs_mean = inputs.mean(dim=(2, 3, 4))[:, :, None, None, None]
+        targets_mean = targets.mean(dim=(2, 3, 4))[:, :, None, None, None]
+        cov = 1 / (n_points - 1) * ((inputs - inputs_mean) * (targets - targets_mean)).sum(dim=(1, 2, 3, 4))       
+        inputs_var = inputs.var(dim=(1, 2, 3, 4))
+        targets_var = targets.var(dim=(1, 2, 3, 4))
+        ssim_loss = (1.0 - (2 * cov + epsilon) / (inputs_var + targets_var + epsilon)).mean()
+        
 
         # KL Divergence (for VAE)
         # Compute the KL divergence using mu and logvar
         logvar = torch.clamp(logvar, min=-10, max=10)
         kl_loss = -0.5 * torch.mean(1 + logvar - mu.pow(2) - logvar.exp())
 
-        # Total loss (MSE + KL divergence)
-        return alpha * mse_loss + beta*kl_loss
+        diffusion_loss = 0
+        if predicted_noise is not None and actual_noise is not None:
+            diffusion_loss = self.mse(predicted_noise, actual_noise)
+
+        return alpha * mse_loss + alpha2 * ssim_loss + beta * kl_loss + gamma * diffusion_loss  # Weight diffusion loss
     
-    def separate_losses(self, inputs, targets, mu, logvar):
+    def separate_losses(self, inputs, targets, mu, logvar, actual_noise, predicted_noise):
         """
         Computes individual losses: MSE and KL divergence
         """
         # Compute MSE loss
         mse_loss = ((inputs - targets) ** 2).mean()
+        
+        # compute SSIM loss
+        epsilon = 1e-6
+        map_shape = inputs.size()
+        n_points = map_shape[2] * map_shape[3] * map_shape[4]
+        inputs_mean = inputs.mean(dim=(2, 3, 4))[:, :, None, None, None]
+        targets_mean = targets.mean(dim=(2, 3, 4))[:, :, None, None, None]
+        cov = 1 / (n_points - 1) * ((inputs - inputs_mean) * (targets - targets_mean)).sum(dim=(1, 2, 3, 4))       
+        inputs_var = inputs.var(dim=(1, 2, 3, 4))
+        targets_var = targets.var(dim=(1, 2, 3, 4))
+        ssim_loss = (1.0 - (2 * cov + epsilon) / (inputs_var + targets_var + epsilon)).mean()
 
         # Compute KL divergence
         logvar = torch.clamp(logvar, min=-10, max=10)
         kl_loss = -0.5 * torch.mean(1 + logvar - mu.pow(2) - logvar.exp())
         
-        return mse_loss.item(), kl_loss.item()
+        diffusion_loss = 0
+        if predicted_noise is not None and actual_noise is not None:
+            diffusion_loss = self.mse(predicted_noise, actual_noise)
+        
+        return mse_loss.item(), ssim_loss.item(), kl_loss.item(), diffusion_loss.item()
 
 
 def val(model, dataloader, device, criterion):
     model.eval()
 
     val_mse_loss = AverageMeter()
+    val_ssim_loss = AverageMeter()
     val_kl_loss = AverageMeter()
+    val_diff_loss = AverageMeter()
     for data in dataloader:
         data = data.to(device)
         with torch.no_grad():
-            pred, mu, logvar = model(data)  # Get predictions, mu, and logvar
+            pred, mu, logvar, actual_noise, predicted_noise = model(data)  # Get predictions, mu, and logvar
             label = data.y
-            val_mse, val_kl = criterion.separate_losses(pred, label, mu, logvar)
+            val_mse, val_ssim, val_kl, val_diff = criterion.separate_losses(pred, label, mu, logvar, actual_noise, predicted_noise)
             val_mse_loss.update(val_mse, label.size(0))
+            val_ssim_loss.update(val_ssim, label.size(0))
             val_kl_loss.update(val_kl, label.size(0))
+            val_diff_loss.update(val_diff, label.size(0))
 
     # Get average loss values
     epoch_mse_loss = val_mse_loss.get_average()
+    epoch_ssim_loss = val_ssim_loss.get_average()
     epoch_kl_loss = val_kl_loss.get_average()
+    epoch_diff_loss = val_diff_loss.get_average()
     val_mse_loss.reset()
+    val_ssim_loss.reset()
     val_kl_loss.reset()
+    val_diff_loss.reset()
 
     model.train()
 
-    return epoch_mse_loss, epoch_kl_loss
+    return epoch_mse_loss, epoch_ssim_loss, epoch_kl_loss, epoch_diff_loss
 
 
 if __name__ == '__main__':
+
     import argparse
+    
     # config for the proper model saving
     cfg = 'TrainConfig_CryoLigate'
     config = Config(cfg)
@@ -97,11 +139,15 @@ if __name__ == '__main__':
     
     parser = argparse.ArgumentParser(description="Train CryoLigate model with weighted loss")
     parser.add_argument('--alpha', type=float, default=1.0, help='Weight for MSE loss')
+    parser.add_argument('--alpha2', type=float, default=1.0, help='Weight for SSIM loss')
     parser.add_argument('--beta', type=float, default=0.9, help='Weight for KL divergence loss')
-
+    parser.add_argument('--gamma', type=float, default=0.1, help='Weight for diffusion loss')
     args_cli = parser.parse_args()
+
     alpha = args_cli.alpha
+    alpha2 = args_cli.alpha2
     beta = args_cli.beta
+    gamma = args_cli.gamma
     
     # data paths
     data_root = '/proj/berzelius-2022-haloi/users/x_nanha'
@@ -118,7 +164,7 @@ if __name__ == '__main__':
     valid_df = toy_df.iloc[val_idx]
 
     # clear name for the model (to distinguish in the future)
-    model_name = f"k_{k}_Unet3D_transformer_CVAE_alpha_{alpha}_beta_{beta}_with_Ligand_embeddings_Hybrid_loss_Norm_minmax_maps_Forward_model_bad_nconfs3_to_Good_res2.0_Batchsize_{batch_size}_lr_{lr:.1e}_wd_{wd:.1e}"
+    model_name = f"k_{k}_Unet3D_transformer_CVAE_LDiff_alpha_{alpha}_alpha2_{alpha2}_beta_{beta}_gamma_{gamma}_with_Ligand_embeddings_Hybrid_loss_Norm_minmax_maps_Forward_model_bad_nconfs3_to_Good_res2.0_Batchsize_{batch_size}_lr_{lr:.1e}_wd_{wd:.1e}"
     args["model_name"] = model_name
 
     # find and read training and validation data
@@ -182,7 +228,9 @@ if __name__ == '__main__':
     criterion = CustomLoss()
     val_criterion = CustomLoss()
     train_loss_mse = AverageMeter()
+    train_loss_ssim = AverageMeter()
     train_loss_kl = AverageMeter()
+    train_loss_diff = AverageMeter()
 
     # initial_train_loss = val(model, train_loader, device, val_criterion)
     # initial_val_loss = val(model, valid_loader, device, val_criterion)
@@ -198,35 +246,41 @@ if __name__ == '__main__':
         for data in train_loader:
             data = data.to(device)
             print("Data size", data.size())
-            pred, mu, logvar = model(data)
+            pred, mu, logvar, actual_noise, predicted_noise = model(data)
             label = data.y
             print("PRED", pred.size())
             print("LABEL", label.size())
 
             # Compute loss with the modified loss function
-            loss = criterion(pred, label, mu, logvar, alpha, beta)
+            loss = criterion(pred, label, mu, logvar, alpha, alpha2, beta, gamma, actual_noise, predicted_noise)
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
 
             # compute and store training losses
-            train_mse, train_kl = criterion.separate_losses(pred, label, mu, logvar)
+            train_mse, train_ssim, train_kl, train_diff = criterion.separate_losses(pred, label, mu, logvar, actual_noise, predicted_noise)
             train_loss_mse.update(train_mse, label.size(0))
+            train_loss_ssim.update(train_ssim, label.size(0))
             train_loss_kl.update(train_kl, label.size(0))
+            train_loss_diff.update(train_diff, label.size(0))
         
         # average train loss
         epoch_train_mse = train_loss_mse.get_average()
         train_loss_mse.reset()
+        epoch_train_ssim = train_loss_ssim.get_average()
+        train_loss_ssim.reset()
         epoch_train_kl = train_loss_kl.get_average()
         train_loss_kl.reset()
+        epoch_train_diff = train_loss_diff.get_average()
+        train_loss_diff.reset()
         
         # average validation loss
-        epoch_val_mse, epoch_val_kl = val(model, valid_loader, device, val_criterion)
-        total_val_loss = epoch_val_mse + epoch_val_kl 
+        epoch_val_mse, epoch_val_ssim, epoch_val_kl, epoch_val_diff = val(model, valid_loader, device, val_criterion)
+        total_val_loss = epoch_val_mse + epoch_val_ssim + epoch_val_kl + epoch_val_diff
 
         # log training information: epochs, losses etc
-        msg = "epoch-%d, train_mse_loss-%.7f, train_kl_loss-%.7f, val_mse_loss-%.7f, val_kl_loss-%.7f" \
-        % (epoch, epoch_train_mse , epoch_train_kl, epoch_val_mse, epoch_val_kl)
+        msg = "epoch-%d, train_mse_loss-%.7f, train_ssim_loss-%.7f, train_kl_loss-%.7f, train_diff_loss-%.7f, val_mse_loss-%.7f, val_ssim_loss-%.7f, val_kl_loss-%.7f, val_diff_loss-%.7f" \
+        % (epoch, epoch_train_mse , epoch_train_ssim, epoch_train_kl, epoch_train_diff, epoch_val_mse, epoch_val_ssim, epoch_val_kl, epoch_val_diff)
         logger.info(msg)
 
 
