@@ -1,1 +1,0 @@
-{"model": "GIGN", "data_root": "./data", "save_dir": "./model", "graph_type": "Graph_GIGN", "repeat": 3, "fold": 0, "epochs": 800, "batch_size": 128, "early_stop_epoch": 100, "save_model": true, "create": true, "mark": null, "model_name": "k_0_unet_with_embeddings_combined_loss_norm_minmax_maps_forward_model_bad_nconfs3_to_good_res2.0_batchsize_32_lr_5e-4_wd_1e-4"}

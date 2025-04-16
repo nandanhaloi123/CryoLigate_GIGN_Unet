@@ -1,7 +1,0 @@
-2025-02-25 10:50:55 - INFO - train data: 13259
-2025-02-25 10:50:55 - INFO - train unqiue data: 13259
-2025-02-25 10:50:55 - INFO - valid data: 1474
-2025-02-25 10:50:55 - INFO - valid unqiue data: 1474
-2025-02-25 10:55:01 - INFO - Epoch-0, Loss_G: 10.2748032, Loss_D: 0.0005570, Val_MSE: 0.0005797, Val_KL: 11504281.7840037
-2025-02-25 10:58:59 - INFO - Epoch-1, Loss_G: 6.7433472, Loss_D: 0.0001375, Val_MSE: 0.0005819, Val_KL: 1.9935990
-2025-02-25 10:59:05 - INFO - Saved new best model at epoch 1 with validation loss 1.9941809

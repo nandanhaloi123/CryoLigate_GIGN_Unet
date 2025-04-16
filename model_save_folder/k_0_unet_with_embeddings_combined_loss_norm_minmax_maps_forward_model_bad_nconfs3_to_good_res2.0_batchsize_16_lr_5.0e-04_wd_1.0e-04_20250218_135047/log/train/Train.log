@@ -1,6 +1,0 @@
-2025-02-18 13:50:47 - INFO - train data: 0
-2025-02-18 13:50:47 - INFO - train unqiue data: 0
-2025-02-18 13:50:47 - INFO - valid data: 0
-2025-02-18 13:50:47 - INFO - valid unqiue data: 0
-2025-02-18 13:50:52 - INFO - epoch-0, train_mse_loss-0.0000000, train_ssim_loss-0.0000000, val_mse_loss-0.0000000, val_ssim_loss-0.0000000
-2025-02-18 13:50:52 - INFO - epoch-1, train_mse_loss-0.0000000, train_ssim_loss-0.0000000, val_mse_loss-0.0000000, val_ssim_loss-0.0000000

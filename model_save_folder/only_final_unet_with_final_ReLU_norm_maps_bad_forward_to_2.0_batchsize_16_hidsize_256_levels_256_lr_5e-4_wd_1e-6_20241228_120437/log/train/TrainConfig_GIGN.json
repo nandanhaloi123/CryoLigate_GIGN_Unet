@@ -1,1 +1,0 @@
-{"model": "GIGN", "data_root": "./data", "save_dir": "./model", "graph_type": "Graph_GIGN", "repeat": 3, "fold": 0, "epochs": 800, "batch_size": 128, "early_stop_epoch": 100, "save_model": true, "create": true, "mark": null, "model_name": "only_final_unet_with_final_ReLU_norm_maps_bad_forward_to_2.0_batchsize_16_hidsize_256_levels_256_lr_5e-4_wd_1e-6"}
