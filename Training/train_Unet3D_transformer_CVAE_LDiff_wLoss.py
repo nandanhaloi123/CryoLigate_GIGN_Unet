@@ -106,7 +106,7 @@ if __name__ == '__main__':
     config = Config(cfg)
     args = config.get_config()
     batch_size = 16
-    epochs = 500
+    epochs = 200
     lr = 1e-4
     wd = 1e-4
     

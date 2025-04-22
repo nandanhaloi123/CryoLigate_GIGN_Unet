@@ -164,7 +164,7 @@ if __name__ == '__main__':
     valid_df = toy_df.iloc[val_idx]
 
     # clear name for the model (to distinguish in the future)
-    model_name = f"k_{k}_Unet3D_transformer_CVAE_LDiff_alpha_{alpha}_alpha2_{alpha2}_beta_{beta}_gamma_{gamma}_with_Ligand_embeddings_Hybrid_loss_Norm_minmax_maps_Forward_model_bad_nconfs3_to_Good_res2.0_Batchsize_{batch_size}_lr_{lr:.1e}_wd_{wd:.1e}"
+    model_name = f"k_{k}_Unet3D_transformer_CVAE_LDiff_SSIM_alpha_{alpha}_alpha2_{alpha2}_beta_{beta}_gamma_{gamma}_with_Ligand_embeddings_Hybrid_loss_Norm_minmax_maps_Forward_model_bad_nconfs3_to_Good_res2.0_Batchsize_{batch_size}_lr_{lr:.1e}_wd_{wd:.1e}"
     args["model_name"] = model_name
 
     # find and read training and validation data

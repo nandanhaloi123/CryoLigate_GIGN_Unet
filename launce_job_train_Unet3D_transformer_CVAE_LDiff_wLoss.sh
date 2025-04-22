@@ -1,22 +1,29 @@
 #!/bin/bash
 
-# Create 20 combinations of alpha, beta, gamma
-alphas=(1.0 0.5 0.1 2.0 3.0 4.0 5.0)
-betas=(0.001 0.01 0.1 0.5 1.0)
-gammas=(0.001 0.01 0.1 0.5 1.0)
+# Define your hyperparameter values
+alphas=(1.0 3.0 4.0 5.0)
+betas=(0.001 0.1 1.0)
+gammas=(0.001 0.1 1.0)
 
+# Optional: limit the number of jobs
+MAX_JOBS=-1  # Set to -1 to run all combinations
 job_count=0
 
+# Loop over all combinations
 for alpha in "${alphas[@]}"; do
-  for beta in "${betas[@]}"; do
-    for gamma in "${gammas[@]}"; do
-      if [ $job_count -ge 30 ]; then
-        break 3  # Exit all loops after 30 jobs
-      fi
+    for beta in "${betas[@]}"; do
+      for gamma in "${gammas[@]}"; do
+        # Check limit
+        if [[ $MAX_JOBS -ge 0 && $job_count -ge $MAX_JOBS ]]; then
+          echo "Reached max job limit: $MAX_JOBS"
+          exit 0
+        fi
 
-      job_script="submit_alpha_${alpha}_beta_${beta}_gamma_${gamma}.sh"
+        # Create job script name
+        job_script="submit_alpha_${alpha}_beta_${beta}_gamma_${gamma}.sh"
 
-      cat <<EOF > $job_script
+        # Write job script
+        cat <<EOF > $job_script
 #!/bin/bash
 #SBATCH --gpus 1
 #SBATCH -t 3-00:00:00
@@ -28,10 +35,12 @@ export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
 python Training/train_Unet3D_transformer_CVAE_LDiff_wLoss.py --alpha ${alpha} --beta ${beta} --gamma ${gamma}
 EOF
 
-      chmod +x $job_script
-      sbatch $job_script
-
-      ((job_count++))
+        chmod +x $job_script
+        sbatch $job_script
+        ((job_count++))
+        rm $job_script 
+      done
     done
-  done
 done
+
+echo "Submitted $job_count jobs."
