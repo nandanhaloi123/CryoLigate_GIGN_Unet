@@ -1,3 +1,4 @@
+import torch.nn.functional as F
 import sys
 import os
 import torch
@@ -8,42 +9,32 @@ from torch_geometric.nn import global_add_pool
 # append repo path to sys for convenient imports
 sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 
-class CryoLigate(nn.Module):
+class CryoLigateCVAE(nn.Module):
     def __init__(self):
         super().__init__()
-
-        output_shape = (1, 48, 48, 48)
-        embedding_size = 768
         
-        self.MLP1DTo3D = MLP1DTo3D(embedding_size, output_shape)
-        self.UNet3D = UNet3D(in_channels=2, num_classes=1) 
-        self.ReLU = nn.ReLU() 
-
+        Ligand_output_shape_after_MLP = (1, 48, 48, 48)
+        embedding_size = 768
+        latent_dim = 256  # Latent space dimension
+        
+        self.MLP1DTo3D = MLP1DTo3D(embedding_size, Ligand_output_shape_after_MLP)
+        self.UNet3DTransformerCVAE = UNet3DTransformerCVAE(in_channels=2, latent_dim=latent_dim, embedding_dim=embedding_size)
+        self.ReLU = nn.ReLU()
+    
     def forward(self, data):
-        # read data
         low_res_dens, ligand_embedding = data.low_res_dens, data.ligand_embedding
         print("Ligand embedding before squeeze shape:", ligand_embedding.size())
-        ligand_embedding = ligand_embedding.squeeze() # remove unnecessary dimensions in the ligands' embeddings
+        ligand_embedding = ligand_embedding.squeeze()
         print("Ligand embedding shape:", ligand_embedding.size())
 
-        # reshape ligand embeddings
         x = self.MLP1DTo3D(ligand_embedding)
         print("Ligand embedding after MLP1DTo3D shape:", x.size())
-
-        # concatenate with low-resolution maps
-        print("Low res density shape:", x.size())
         x = torch.concat((x, low_res_dens), dim=1)
         print("Ligand embedding concat with Low res density shape:", x.size())
-
-        # feed concatenated data into Unet
-        x = self.UNet3D(x)
-        print("After UNet3D:", x.size())
         
-        # apply final ReLU
+        x, mu, logvar, actual_noise, predicted_noise = self.UNet3DTransformerCVAE(x, ligand_embedding)
         x = self.ReLU(x)
-        print("After final ReLU:", x.size())
-
-        return x
+        return x, mu, logvar, actual_noise, predicted_noise
 
 
 class MLP1DTo3D(nn.Module):
@@ -72,6 +63,7 @@ class MLP1DTo3D(nn.Module):
         x = x.view(-1, *self.output_shape)  # Reshapes output to (batch_size, A, B, C)
         
         return x
+
 
 class Conv3DBlock(nn.Module):
     """
@@ -110,9 +102,6 @@ class Conv3DBlock(nn.Module):
         else:
             out = res
         return out, res
-
-
-
 
 class UpConv3DBlock(nn.Module):
     """
@@ -153,51 +142,52 @@ class UpConv3DBlock(nn.Module):
         print("Decoder block 3 shape:", out.size())
         if self.last_layer: out = self.conv3(out)
         return out
+
+# 3D UNet with Transformer and Attention
+class UNet3DTransformerCVAE(nn.Module):
+    def __init__(self, in_channels=2, level_channels=[64, 128, 256], bottleneck_channel=512, latent_dim=256, embedding_dim=768):
+        super().__init__()
+        self.encoder1 = Conv3DBlock(in_channels, level_channels[0])
+        self.encoder2 = Conv3DBlock(level_channels[0], level_channels[1])
+        self.encoder3 = Conv3DBlock(level_channels[1], level_channels[2])
+        self.bottleneck = Conv3DBlock(level_channels[2], bottleneck_channel, bottleneck=True)
         
-
-
-
-class UNet3D(nn.Module):
-    """
-    The 3D UNet model
-    -- __init__()
-    :param in_channels -> number of input channels
-    :param num_classes -> specifies the number of output channels or masks for different classes
-    :param level_channels -> the number of channels at each level (count top-down)
-    :param bottleneck_channel -> the number of bottleneck channels 
-    :param device -> the device on which to run the model
-    -- forward()
-    :param input -> input Tensor
-    :return -> Tensor
-    """
+        # Conditioning mechanism for ligand embedding
+        self.embed_fc = nn.Linear(embedding_dim, latent_dim)
+        self.fc_mu = nn.Linear(bottleneck_channel * 6 * 6 * 6 + latent_dim, latent_dim)
+        self.fc_logvar = nn.Linear(bottleneck_channel * 6 * 6 * 6 + latent_dim, latent_dim)
+        self.fc_decode = nn.Linear(latent_dim + latent_dim, bottleneck_channel * 6 * 6 * 6)
+        
+        self.transformer = Transformer3D(bottleneck_channel, num_heads=8, mlp_dim=1024)
+        
+        self.decoder3 = UpConv3DBlock(bottleneck_channel, level_channels[2])
+        self.decoder2 = UpConv3DBlock(level_channels[2], level_channels[1])
+        self.decoder1 = UpConv3DBlock(level_channels[1], level_channels[0], last_layer=True)
     
-    def __init__(self, in_channels, num_classes, level_channels=[64, 128, 256], bottleneck_channel=512) -> None:
-        super(UNet3D, self).__init__()
-        level_1_chnls, level_2_chnls, level_3_chnls = level_channels[0], level_channels[1], level_channels[2]
-        self.a_block1 = Conv3DBlock(in_channels=in_channels, out_channels=level_1_chnls)
-        self.a_block2 = Conv3DBlock(in_channels=level_1_chnls, out_channels=level_2_chnls)
-        self.a_block3 = Conv3DBlock(in_channels=level_2_chnls, out_channels=level_3_chnls)
-        self.bottleNeck = Conv3DBlock(in_channels=level_3_chnls, out_channels=bottleneck_channel, bottleneck= True)
-        self.s_block3 = UpConv3DBlock(in_channels=bottleneck_channel, res_channels=level_3_chnls)
-        self.s_block2 = UpConv3DBlock(in_channels=level_3_chnls, res_channels=level_2_chnls)
-        self.s_block1 = UpConv3DBlock(in_channels=level_2_chnls, res_channels=level_1_chnls, num_classes=num_classes, last_layer=True)
-
+    def reparameterize(self, mu, logvar):
+        std = torch.exp(0.5 * logvar)
+        eps = torch.randn_like(std)
+        return mu + eps * std
     
-    def forward(self, input):
-        #Analysis path forward feed
-        out, residual_level1 = self.a_block1(input)
-        out, residual_level2 = self.a_block2(out)
-        out, residual_level3 = self.a_block3(out)
-        print("Entering bottleneck:", out.size())
-        out, _ = self.bottleNeck(out)
-
-        #Synthesis path forward feed
-        out = self.s_block3(out, residual_level3)
-        out = self.s_block2(out, residual_level2)
-        out = self.s_block1(out, residual_level1)
-        return out
-
-
-## Check model parameter 
-model = UNet3D(in_channels=1, num_classes=1)
-print("Num params: ", sum(p.numel() for p in model.parameters()))
+    def forward(self, x, ligand_embedding):
+        x, res1 = self.encoder1(x)
+        x, res2 = self.encoder2(x)
+        x, res3 = self.encoder3(x)
+        x, _ = self.bottleneck(x)
+        
+        x_flat = x.view(x.size(0), -1)
+        ligand_embed = self.embed_fc(ligand_embedding)
+        
+        x_cat = torch.cat([x_flat, ligand_embed], dim=-1)
+        mu = self.fc_mu(x_cat)
+        logvar = self.fc_logvar(x_cat)
+        z = self.reparameterize(mu, logvar)
+        
+        z_cat = torch.cat([z, ligand_embed], dim=-1)
+        x = self.fc_decode(z_cat).view(x.size(0), -1, 6, 6, 6)
+        x = self.transformer(x)
+        
+        x = self.decoder3(x, res3)
+        x = self.decoder2(x, res2)
+        x = self.decoder1(x, res1)
+        return x, mu, logvar

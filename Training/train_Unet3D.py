@@ -34,7 +34,7 @@ class CustomLoss(nn.Module):
     def __init__(self):
         super(CustomLoss, self).__init__()
 
-    def forward(self, inputs, targets):
+    def forward(self, inputs, targets, alpha, beta):
         """
         The forward method is used for training (loss.backward())
         """
@@ -52,7 +52,7 @@ class CustomLoss(nn.Module):
         targets_var = targets.var(dim=(1, 2, 3, 4))
         ssim_loss = (1.0 - (2 * cov + epsilon) / (inputs_var + targets_var + epsilon)).mean()
 
-        return mse_loss + ssim_loss
+        return alpha*mse_loss + beta*ssim_loss
     
     def separate_losses(self, inputs, targets):
         """
@@ -119,15 +119,23 @@ def val(model, dataloader, device, criterion):
     return epoch_mse_loss, epoch_ssim_loss
 
 if __name__ == '__main__':
-
+    import argparse
     # config for the proper model saving
     cfg = 'TrainConfig_CryoLigate'
     config = Config(cfg)
     args = config.get_config()
     batch_size = 16
-    epochs = 500
+    epochs = 200
     lr = 5e-4
     wd = 1e-4
+
+    parser = argparse.ArgumentParser(description="Train CryoLigate model with weighted loss")
+    parser.add_argument('--alpha', type=float, default=1.0, help='Weight for MSE loss')
+    parser.add_argument('--beta', type=float, default=1.0, help='Weight for SSIM loss')
+    args_cli = parser.parse_args()
+
+    alpha = args_cli.alpha
+    beta = args_cli.beta
 
     # data paths
     data_root = '/proj/berzelius-2022-haloi/users/x_nanha'
@@ -144,7 +152,9 @@ if __name__ == '__main__':
     valid_df = toy_df.iloc[val_idx]
 
     # clear name for the model (to distinguish in the future)
-    model_name = f"k_{k}_Unet3D_with_Ligand_embeddings_Hybrid_loss_Norm_minmax_maps_Forward_model_bad_nconfs3_to_Good_res2.0_Batchsize_{batch_size}_lr_{lr:.1e}_wd_{wd:.1e}"
+    # model_name = f"k_{k}_Unet3D_with_Ligand_embeddings_Hybrid_loss_Norm_minmax_maps_Forward_model_bad_nconfs3_to_Good_res2.0_Batchsize_{batch_size}_lr_{lr:.1e}_wd_{wd:.1e}"
+    model_name = f"Unet3D_with_Ligand_embeddings_{alpha}MSE_{beta}SSIM_loss_Norm_minmax_maps_Forward_model_bad_nconfs3_to_Good_res2.0_Batchsize_{batch_size}_lr_{lr:.1e}_wd_{wd:.1e}"
+
     args["model_name"] = model_name
 
     # find and read training and validation data
@@ -224,7 +234,7 @@ if __name__ == '__main__':
             print("PRED", pred.size())
             print("LABEL", label.size())
 
-            loss = criterion(pred, label)
+            loss = criterion(pred, label, alpha, beta)
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()

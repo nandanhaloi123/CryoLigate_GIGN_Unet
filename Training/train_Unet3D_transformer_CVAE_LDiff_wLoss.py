@@ -20,7 +20,7 @@ os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True"
 sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 
 from utils import AverageMeter
-from model.Unet3D_transformer_CVAE_CAtsn_LDiff_wLoss import CryoLigateCVAE
+from model.Unet3D_transformer_CVAE_LDiff_wLoss import CryoLigateCVAE
 from data_generation.generate_dataset import NetworkDataset, PLIDataLoader
 from config.config_dict import Config
 from log.train_logger import TrainLogger
@@ -105,8 +105,8 @@ if __name__ == '__main__':
     cfg = 'TrainConfig_CryoLigate'
     config = Config(cfg)
     args = config.get_config()
-    batch_size = 16
-    epochs = 200
+    batch_size = 2
+    epochs = 2
     lr = 1e-4
     wd = 1e-4
     
@@ -123,7 +123,7 @@ if __name__ == '__main__':
     # data paths
     data_root = '/proj/berzelius-2022-haloi/users/x_nanha'
     toy_dir = os.path.join(data_root, 'PDBBind_Zenodo_6408497')
-    toy_df = pd.read_csv(os.path.join(toy_dir, "PDB_IDs_with_rdkit_length_less_than_24A_nbonds_less_than_10.csv"))
+    toy_df = pd.read_csv(os.path.join(toy_dir, "Testing_Data.csv"))
 
     # cross-validation splitting
     n_splits = 10

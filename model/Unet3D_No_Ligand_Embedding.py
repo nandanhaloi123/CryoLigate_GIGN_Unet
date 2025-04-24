@@ -16,7 +16,7 @@ class CryoLigate(nn.Module):
         embedding_size = 768
         
         self.MLP1DTo3D = MLP1DTo3D(embedding_size, output_shape)
-        self.UNet3D = UNet3D(in_channels=2, num_classes=1) 
+        self.UNet3D = UNet3D(in_channels=1, num_classes=1) 
         self.ReLU = nn.ReLU() 
 
     def forward(self, data):
@@ -32,11 +32,10 @@ class CryoLigate(nn.Module):
 
         # concatenate with low-resolution maps
         print("Low res density shape:", x.size())
-        x = torch.concat((x, low_res_dens), dim=1)
-        print("Ligand embedding concat with Low res density shape:", x.size())
+        # x = torch.concat((x, low_res_dens), dim=1)
+        # print("Ligand embedding concat with Low res density shape:", x.size())
 
-        # feed concatenated data into Unet
-        x = self.UNet3D(x)
+        x = self.UNet3D(low_res_dens)
         print("After UNet3D:", x.size())
         
         # apply final ReLU
@@ -199,5 +198,5 @@ class UNet3D(nn.Module):
 
 
 ## Check model parameter 
-model = UNet3D(in_channels=1, num_classes=1)
-print("Num params: ", sum(p.numel() for p in model.parameters()))
+# model = UNet3D(in_channels=1, num_classes=1)
+# print("Num params: ", sum(p.numel() for p in model.parameters()))

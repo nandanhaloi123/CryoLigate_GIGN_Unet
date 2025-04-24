@@ -13,62 +13,34 @@ import numpy as np
 from datetime import datetime, timezone
 from sklearn.metrics import mean_squared_error
 from sklearn.model_selection import KFold
-import os
-os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True"
+
 
 # append repo path to sys for convenient imports
 sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 
 from utils import AverageMeter
-from model.Unet3D_transformer_CVAE_LDiff_wLoss import CryoLigateCVAE
+from model.Unet3D_Enc_Embedding import CryoLigate
 from data_generation.generate_dataset import NetworkDataset, PLIDataLoader
 from config.config_dict import Config
 from log.train_logger import TrainLogger
 from utils import *
 
 
+
 class CustomLoss(nn.Module):
+    """
+    The class for combined loss: MSE + SSIM 
+    """
     def __init__(self):
         super(CustomLoss, self).__init__()
-        self.mse = nn.MSELoss()
 
-    def forward(self, inputs, targets, mu, logvar, alpha, alpha2, beta, gamma, actual_noise=None, predicted_noise=None):
+    def forward(self, inputs, targets, alpha, beta):
         """
-        Computes the combined loss: reconstruction loss + SSIM + KL divergence + Diffusion loss
+        The forward method is used for training (loss.backward())
         """
-        # Reconstruction loss (MSE)
-        mse_loss = self.mse(inputs, targets)
-        
-        # compute SSIM loss
-        epsilon = 1e-6
-        map_shape = inputs.size()
-        n_points = map_shape[2] * map_shape[3] * map_shape[4]
-        inputs_mean = inputs.mean(dim=(2, 3, 4))[:, :, None, None, None]
-        targets_mean = targets.mean(dim=(2, 3, 4))[:, :, None, None, None]
-        cov = 1 / (n_points - 1) * ((inputs - inputs_mean) * (targets - targets_mean)).sum(dim=(1, 2, 3, 4))       
-        inputs_var = inputs.var(dim=(1, 2, 3, 4))
-        targets_var = targets.var(dim=(1, 2, 3, 4))
-        ssim_loss = (1.0 - (2 * cov + epsilon) / (inputs_var + targets_var + epsilon)).mean()
-        
-
-        # KL Divergence (for VAE)
-        # Compute the KL divergence using mu and logvar
-        logvar = torch.clamp(logvar, min=-10, max=10)
-        kl_loss = -0.5 * torch.mean(1 + logvar - mu.pow(2) - logvar.exp())
-
-        diffusion_loss = 0
-        if predicted_noise is not None and actual_noise is not None:
-            diffusion_loss = self.mse(predicted_noise, actual_noise)
-
-        return alpha * mse_loss + alpha2 * ssim_loss + beta * kl_loss + gamma * diffusion_loss  # Weight diffusion loss
-    
-    def separate_losses(self, inputs, targets, mu, logvar, actual_noise, predicted_noise):
-        """
-        Computes individual losses: MSE and KL divergence
-        """
-        # Compute MSE loss
+        # compute MSE loss
         mse_loss = ((inputs - targets) ** 2).mean()
-        
+
         # compute SSIM loss
         epsilon = 1e-6
         map_shape = inputs.size()
@@ -80,79 +52,96 @@ class CustomLoss(nn.Module):
         targets_var = targets.var(dim=(1, 2, 3, 4))
         ssim_loss = (1.0 - (2 * cov + epsilon) / (inputs_var + targets_var + epsilon)).mean()
 
-        # Compute KL divergence
-        logvar = torch.clamp(logvar, min=-10, max=10)
-        kl_loss = -0.5 * torch.mean(1 + logvar - mu.pow(2) - logvar.exp())
-        
-        diffusion_loss = 0
-        if predicted_noise is not None and actual_noise is not None:
-            diffusion_loss = self.mse(predicted_noise, actual_noise)
-        
-        return mse_loss.item(), ssim_loss.item(), kl_loss.item(), diffusion_loss.item()
+        return alpha*mse_loss + beta*ssim_loss
+    
+    def separate_losses(self, inputs, targets):
+        """
+        Additional method that just outputs values of the two losses.
+        Required for logging and post-processing.
+        """
+        with torch.no_grad():
+            # compute MSE loss
+            mse_loss = ((inputs - targets) ** 2).mean()
+
+            # compute SSIM loss
+            epsilon = 1e-6
+            map_shape = inputs.size()
+            n_points = map_shape[2] * map_shape[3] * map_shape[4]
+            inputs_mean = inputs.mean(dim=(2, 3, 4))[:, :, None, None, None]
+            targets_mean = targets.mean(dim=(2, 3, 4))[:, :, None, None, None]
+            cov = 1 / (n_points - 1) * ((inputs - inputs_mean) * (targets - targets_mean)).sum(dim=(1, 2, 3, 4))       
+            inputs_var = inputs.var(dim=(1, 2, 3, 4))
+            targets_var = targets.var(dim=(1, 2, 3, 4))
+            ssim_loss = (1.0 - (2 * cov + epsilon) / (inputs_var + targets_var + epsilon)).mean()
+            
+        return mse_loss.item(), ssim_loss.item()
 
 
 def val(model, dataloader, device, criterion):
+    """
+    Computes losses on the validation set.
+
+    Args:
+        model - the NN that is being trained
+        dataloader - loader of the validation data
+        device - CUDA device object (usually cuda:0)
+        criterion - loss object (of the CustomLoss class)
+
+    Returns:
+        epoch_mse_loss - MSE loss on the validation set
+        epoch_ssim_loss - SSIM loss on the validation set 
+    """
+
+    # put the model into evaluation mode
     model.eval()
 
+    # compute losses on each iteration
     val_mse_loss = AverageMeter()
     val_ssim_loss = AverageMeter()
-    val_kl_loss = AverageMeter()
-    val_diff_loss = AverageMeter()
     for data in dataloader:
         data = data.to(device)
         with torch.no_grad():
-            pred, mu, logvar, actual_noise, predicted_noise = model(data)  # Get predictions, mu, and logvar
+            pred = model(data)
             label = data.y
-            val_mse, val_ssim, val_kl, val_diff = criterion.separate_losses(pred, label, mu, logvar, actual_noise, predicted_noise)
+            val_mse, val_ssim = criterion.separate_losses(pred, label)
             val_mse_loss.update(val_mse, label.size(0))
             val_ssim_loss.update(val_ssim, label.size(0))
-            val_kl_loss.update(val_kl, label.size(0))
-            val_diff_loss.update(val_diff, label.size(0))
 
-    # Get average loss values
+    # get average loss values
     epoch_mse_loss = val_mse_loss.get_average()
-    epoch_ssim_loss = val_ssim_loss.get_average()
-    epoch_kl_loss = val_kl_loss.get_average()
-    epoch_diff_loss = val_diff_loss.get_average()
     val_mse_loss.reset()
+    epoch_ssim_loss = val_ssim_loss.get_average()
     val_ssim_loss.reset()
-    val_kl_loss.reset()
-    val_diff_loss.reset()
 
+    # put the model back into training mode
     model.train()
 
-    return epoch_mse_loss, epoch_ssim_loss, epoch_kl_loss, epoch_diff_loss
-
+    return epoch_mse_loss, epoch_ssim_loss
 
 if __name__ == '__main__':
-
     import argparse
-    
     # config for the proper model saving
     cfg = 'TrainConfig_CryoLigate'
     config = Config(cfg)
     args = config.get_config()
     batch_size = 16
     epochs = 200
-    lr = 1e-4
+    lr = 5e-4
     wd = 1e-4
-    
+
     parser = argparse.ArgumentParser(description="Train CryoLigate model with weighted loss")
     parser.add_argument('--alpha', type=float, default=1.0, help='Weight for MSE loss')
-    parser.add_argument('--alpha2', type=float, default=1.0, help='Weight for SSIM loss')
-    parser.add_argument('--beta', type=float, default=0.9, help='Weight for KL divergence loss')
-    parser.add_argument('--gamma', type=float, default=0.1, help='Weight for diffusion loss')
+    parser.add_argument('--beta', type=float, default=1.0, help='Weight for SSIM loss')
     args_cli = parser.parse_args()
 
     alpha = args_cli.alpha
-    alpha2 = args_cli.alpha2
     beta = args_cli.beta
-    gamma = args_cli.gamma
-    
+
     # data paths
     data_root = '/proj/berzelius-2022-haloi/users/x_nanha'
     toy_dir = os.path.join(data_root, 'PDBBind_Zenodo_6408497')
     toy_df = pd.read_csv(os.path.join(toy_dir, "PDB_IDs_with_rdkit_length_less_than_24A_nbonds_less_than_10.csv"))
+    # toy_df = pd.read_csv(os.path.join(toy_dir, "TEMP.csv"))
 
     # cross-validation splitting
     n_splits = 10
@@ -164,7 +153,9 @@ if __name__ == '__main__':
     valid_df = toy_df.iloc[val_idx]
 
     # clear name for the model (to distinguish in the future)
-    model_name = f"k_{k}_Unet3D_transformer_CVAE_LDiff_SSIM_alpha_{alpha}_alpha2_{alpha2}_beta_{beta}_gamma_{gamma}_with_Ligand_embeddings_Hybrid_loss_Norm_minmax_maps_Forward_model_bad_nconfs3_to_Good_res2.0_Batchsize_{batch_size}_lr_{lr:.1e}_wd_{wd:.1e}"
+    # model_name = f"k_{k}_Unet3D_with_Ligand_embeddings_Hybrid_loss_Norm_minmax_maps_Forward_model_bad_nconfs3_to_Good_res2.0_Batchsize_{batch_size}_lr_{lr:.1e}_wd_{wd:.1e}"
+    model_name = f"Unet3D_with_All_Encoder_Ligand_embeddings_{alpha}MSE_{beta}SSIM_loss_Norm_minmax_maps_Forward_model_bad_nconfs3_to_Good_res2.0_Batchsize_{batch_size}_lr_{lr:.1e}_wd_{wd:.1e}"
+
     args["model_name"] = model_name
 
     # find and read training and validation data
@@ -215,13 +206,8 @@ if __name__ == '__main__':
     logger.info(f"valid unqiue data: {len(np.unique(valid_set.data_paths))}")
 
     # specify the model and optimizer
-    # device = torch.device('cuda:0')
-    model = CryoLigateCVAE()
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    if torch.cuda.device_count() > 1:
-        print(f"Using {torch.cuda.device_count()} GPUs!")
-        model = nn.DataParallel(model)
-    model = model.to(device)    
+    device = torch.device('cuda:0')
+    model = CryoLigate().to(device)    
     optimizer = optim.Adam(model.parameters(), lr=lr, weight_decay=wd)
 
     # specify losses and the objects to track train losses
@@ -229,8 +215,6 @@ if __name__ == '__main__':
     val_criterion = CustomLoss()
     train_loss_mse = AverageMeter()
     train_loss_ssim = AverageMeter()
-    train_loss_kl = AverageMeter()
-    train_loss_diff = AverageMeter()
 
     # initial_train_loss = val(model, train_loader, device, val_criterion)
     # initial_val_loss = val(model, valid_loader, device, val_criterion)
@@ -246,43 +230,35 @@ if __name__ == '__main__':
         for data in train_loader:
             data = data.to(device)
             print("Data size", data.size())
-            pred, mu, logvar, actual_noise, predicted_noise = model(data)
+            pred = model(data)
             label = data.y
             print("PRED", pred.size())
             print("LABEL", label.size())
 
-            # Compute loss with the modified loss function
-            loss = criterion(pred, label, mu, logvar, alpha, alpha2, beta, gamma, actual_noise, predicted_noise)
+            loss = criterion(pred, label, alpha, beta)
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
 
             # compute and store training losses
-            train_mse, train_ssim, train_kl, train_diff = criterion.separate_losses(pred, label, mu, logvar, actual_noise, predicted_noise)
+            train_mse, train_ssim = criterion.separate_losses(pred, label)
             train_loss_mse.update(train_mse, label.size(0))
             train_loss_ssim.update(train_ssim, label.size(0))
-            train_loss_kl.update(train_kl, label.size(0))
-            train_loss_diff.update(train_diff, label.size(0))
         
         # average train loss
         epoch_train_mse = train_loss_mse.get_average()
         train_loss_mse.reset()
         epoch_train_ssim = train_loss_ssim.get_average()
         train_loss_ssim.reset()
-        epoch_train_kl = train_loss_kl.get_average()
-        train_loss_kl.reset()
-        epoch_train_diff = train_loss_diff.get_average()
-        train_loss_diff.reset()
         
         # average validation loss
-        epoch_val_mse, epoch_val_ssim, epoch_val_kl, epoch_val_diff = val(model, valid_loader, device, val_criterion)
-        total_val_loss = epoch_val_mse + epoch_val_ssim + epoch_val_kl + epoch_val_diff
+        epoch_val_mse, epoch_val_ssim = val(model, valid_loader, device, val_criterion)
+        total_val_loss = epoch_val_mse + epoch_val_ssim 
 
         # log training information: epochs, losses etc
-        msg = "epoch-%d, train_mse_loss-%.7f, train_ssim_loss-%.7f, train_kl_loss-%.7f, train_diff_loss-%.7f, val_mse_loss-%.7f, val_ssim_loss-%.7f, val_kl_loss-%.7f, val_diff_loss-%.7f" \
-        % (epoch, epoch_train_mse , epoch_train_ssim, epoch_train_kl, epoch_train_diff, epoch_val_mse, epoch_val_ssim, epoch_val_kl, epoch_val_diff)
+        msg = "epoch-%d, train_mse_loss-%.7f, train_ssim_loss-%.7f, val_mse_loss-%.7f, val_ssim_loss-%.7f" \
+        % (epoch, epoch_train_mse , epoch_train_ssim, epoch_val_mse, epoch_val_ssim)
         logger.info(msg)
-
 
         # save the model on the current epoch if it outperforms previous best epoch
         if (epoch >= 2) and (total_val_loss < best_val_loss):

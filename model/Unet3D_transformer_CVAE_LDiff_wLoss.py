@@ -13,23 +13,28 @@ class CryoLigateCVAE(nn.Module):
     def __init__(self):
         super().__init__()
         
-        output_shape = (1, 48, 48, 48)
+        Ligand_output_shape_after_MLP = (1, 48, 48, 48)
         embedding_size = 768
         latent_dim = 256  # Latent space dimension
         
-        self.MLP1DTo3D = MLP1DTo3D(embedding_size, output_shape)
+        self.MLP1DTo3D = MLP1DTo3D(embedding_size, Ligand_output_shape_after_MLP)
         self.UNet3DTransformerCVAE = UNet3DTransformerCVAE(in_channels=2, latent_dim=latent_dim, embedding_dim=embedding_size)
         self.ReLU = nn.ReLU()
     
     def forward(self, data):
         low_res_dens, ligand_embedding = data.low_res_dens, data.ligand_embedding
+        print("Ligand embedding before squeeze shape:", ligand_embedding.size())
         ligand_embedding = ligand_embedding.squeeze()
+        print("Ligand embedding shape:", ligand_embedding.size())
+
         x = self.MLP1DTo3D(ligand_embedding)
+        print("Ligand embedding after MLP1DTo3D shape:", x.size())
         x = torch.concat((x, low_res_dens), dim=1)
+        print("Ligand embedding concat with Low res density shape:", x.size())
+        
         x, mu, logvar, actual_noise, predicted_noise = self.UNet3DTransformerCVAE(x, ligand_embedding)
         x = self.ReLU(x)
         return x, mu, logvar, actual_noise, predicted_noise
-
 
 
 class MLP1DTo3D(nn.Module):
@@ -58,24 +63,45 @@ class MLP1DTo3D(nn.Module):
         x = x.view(-1, *self.output_shape)  # Reshapes output to (batch_size, A, B, C)
         
         return x
-    
-# 3D Convolutional Block
+
+
 class Conv3DBlock(nn.Module):
-    def __init__(self, in_channels, out_channels, bottleneck=False):
-        super().__init__()
-        self.conv1 = nn.Conv3d(in_channels, out_channels // 2, kernel_size=3, padding=1)
-        self.bn1 = nn.BatchNorm3d(out_channels // 2)
-        self.conv2 = nn.Conv3d(out_channels // 2, out_channels, kernel_size=3, padding=1)
-        self.bn2 = nn.BatchNorm3d(out_channels)
+    """
+    The basic block for double 3x3x3 convolutions in the analysis path
+    -- __init__()
+    :param in_channels -> number of input channels
+    :param out_channels -> desired number of output channels
+    :param bottleneck -> specifies the bottlneck block
+    -- forward()
+    :param input -> input Tensor to be convolved
+    :return -> Tensor
+    """
+
+    def __init__(self, in_channels, out_channels, bottleneck = False) -> None:
+        super(Conv3DBlock, self).__init__()
+        self.conv1 = nn.Conv3d(in_channels= in_channels, out_channels=out_channels//2, kernel_size=(3,3,3), padding=1)
+        self.bn1 = nn.BatchNorm3d(num_features=out_channels//2)
+        self.conv2 = nn.Conv3d(in_channels= out_channels//2, out_channels=out_channels, kernel_size=(3,3,3), padding=1)
+        self.bn2 = nn.BatchNorm3d(num_features=out_channels)
         self.relu = nn.ReLU()
         self.bottleneck = bottleneck
         if not bottleneck:
-            self.pooling = nn.MaxPool3d(kernel_size=2, stride=2)
+            self.pooling = nn.MaxPool3d(kernel_size=(2,2,2), stride=2)
+
     
-    def forward(self, x):
-        x = self.relu(self.bn1(self.conv1(x)))
-        x = self.relu(self.bn2(self.conv2(x)))
-        return (self.pooling(x) if not self.bottleneck else x), x
+    def forward(self, input):
+        print("Encoder block 1 shape:", input.size())
+        res = self.relu(self.bn1(self.conv1(input)))
+        print("Encoder block 2 shape:", res.size())
+        res = self.relu(self.bn2(self.conv2(res)))
+        print("Encoder block 3 shape:", res.size())
+        out = None
+        if not self.bottleneck:
+            out = self.pooling(res)
+            print("Encoder block after pooling shape:", res.size())
+        else:
+            out = res
+        return out, res
 
 # Transformer Encoder Block with Attention
 class Transformer3D(nn.Module):
@@ -185,10 +211,15 @@ class UNet3DTransformerCVAE(nn.Module):
         self.encoder3 = Conv3DBlock(level_channels[1], level_channels[2])
         self.bottleneck = Conv3DBlock(level_channels[2], bottleneck_channel, bottleneck=True)
         
+        # NEED A NETWORK WITH NON LINEARITY HERE?
+        Ligand_output_shape_after_MLP = (1, 6, 6, 6)
+        self.MLP1DTo3D = MLP1DTo3D(embedding_dim, Ligand_output_shape_after_MLP)
+
         # Conditioning mechanism for ligand embedding
-        self.embed_fc = nn.Linear(embedding_dim, latent_dim)
-        self.fc_mu = nn.Linear(bottleneck_channel * 6 * 6 * 6 + latent_dim, latent_dim)
-        self.fc_logvar = nn.Linear(bottleneck_channel * 6 * 6 * 6 + latent_dim, latent_dim)
+        # self.embed_fc = nn.Linear(embedding_dim, latent_dim) 
+
+        self.fc_mu = nn.Linear((bottleneck_channel+1) * 6 * 6 * 6, latent_dim)
+        self.fc_logvar = nn.Linear((bottleneck_channel+1) * 6 * 6 * 6, latent_dim)
         
         self.latent_diffusion = LatentDiffusion(latent_dim)  # Add Latent Diffusion here
 
@@ -209,21 +240,39 @@ class UNet3DTransformerCVAE(nn.Module):
         x, res1 = self.encoder1(x)
         x, res2 = self.encoder2(x)
         x, res3 = self.encoder3(x)
+        print("Entering bottleneck:", x.size())
         x, _ = self.bottleneck(x)
+
+        lig_mlp = self.MLP1DTo3D(ligand_embedding)
+        print("Ligand embedding after MLP1DTo3D shape:", lig_mlp.size())
+
+        x = torch.concat((x, lig_mlp), dim=1)
+        print("Ligand embedding concat with last layer of bottleneck:", x.size())
         
         x_flat = x.view(x.size(0), -1)
-        ligand_embed = self.embed_fc(ligand_embedding)
-        
-        x_cat = torch.cat([x_flat, ligand_embed], dim=-1)
-        mu = self.fc_mu(x_cat)
-        logvar = self.fc_logvar(x_cat)
+        print("Flattened shape:", x_flat.size()) # DO WE NEED THE FLATTENING HERE?
+
+        # ligand_embed = self.embed_fc(ligand_embedding)
+        # print("Ligand embedding before adding to flattened vector:", ligand_embed.size()) #NEED SOME WAYS OF CONCATENATING HERE.
+
+        # x_cat = torch.cat([x_flat, ligand_embed], dim=-1)
+        # print("Flattened + Ligand embedding shape:", x_cat.size())
+        mu = self.fc_mu(x_flat)
+        print("Mu shape:", mu.size())
+        logvar = self.fc_logvar(x_flat)
+        print("logvar shape:", logvar.size())
         z = self.reparameterize(mu, logvar)
+        print("After sampling Z shape:", z.size())
         
         # Apply Latent Diffusion
         z, actual_noise, predicted_noise  = self.latent_diffusion(z)
-        
-        z_cat = torch.cat([z, ligand_embed], dim=-1)
-        x = self.fc_decode(z_cat).view(x.size(0), -1, 6, 6, 6)
+
+        print("After diffusion Z shape:", z.size())
+        print("After diffusion actual noise shape:", actual_noise.size())
+        print("After diffusion predicted noise shape:", predicted_noise.size())
+
+        # z_cat = torch.cat([z, ligand_embed], dim=-1)
+        x = self.fc_decode(z).view(x.size(0), -1, 6, 6, 6)
         x = self.transformer(x)
         
         x = self.decoder3(x, res3)

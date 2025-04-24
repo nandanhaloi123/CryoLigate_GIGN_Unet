@@ -36,7 +36,7 @@ class CryoLigate(nn.Module):
         print("Ligand embedding concat with Low res density shape:", x.size())
 
         # feed concatenated data into Unet
-        x = self.UNet3D(x)
+        x = self.UNet3D(x, ligand_embedding)
         print("After UNet3D:", x.size())
         
         # apply final ReLU
@@ -174,20 +174,42 @@ class UNet3D(nn.Module):
     def __init__(self, in_channels, num_classes, level_channels=[64, 128, 256], bottleneck_channel=512) -> None:
         super(UNet3D, self).__init__()
         level_1_chnls, level_2_chnls, level_3_chnls = level_channels[0], level_channels[1], level_channels[2]
-        self.a_block1 = Conv3DBlock(in_channels=in_channels, out_channels=level_1_chnls)
-        self.a_block2 = Conv3DBlock(in_channels=level_1_chnls, out_channels=level_2_chnls)
-        self.a_block3 = Conv3DBlock(in_channels=level_2_chnls, out_channels=level_3_chnls)
-        self.bottleNeck = Conv3DBlock(in_channels=level_3_chnls, out_channels=bottleneck_channel, bottleneck= True)
+        self.a_block1 = Conv3DBlock(in_channels=in_channels, out_channels=level_1_chnls)        
+        self.a_block2 = Conv3DBlock(in_channels=level_1_chnls+1, out_channels=level_2_chnls)
+        self.a_block3 = Conv3DBlock(in_channels=level_2_chnls+1, out_channels=level_3_chnls)
+        self.bottleNeck = Conv3DBlock(in_channels=level_3_chnls+1, out_channels=bottleneck_channel, bottleneck= True)
         self.s_block3 = UpConv3DBlock(in_channels=bottleneck_channel, res_channels=level_3_chnls)
         self.s_block2 = UpConv3DBlock(in_channels=level_3_chnls, res_channels=level_2_chnls)
         self.s_block1 = UpConv3DBlock(in_channels=level_2_chnls, res_channels=level_1_chnls, num_classes=num_classes, last_layer=True)
 
+        
+        embedding_size = 768
+        output_shape_EN2 = (1, 24, 24, 24)
+        output_shape_EN3 = (1, 12, 12, 12)
+        output_shape_bottleneck = (1, 6, 6, 6)
+        self.MLP1DTo3D_EN2 = MLP1DTo3D(embedding_size, output_shape_EN2)
+        self.MLP1DTo3D_EN3 = MLP1DTo3D(embedding_size, output_shape_EN3)
+        self.MLP1DTo3D_bottleneck = MLP1DTo3D(embedding_size, output_shape_bottleneck)
+
     
-    def forward(self, input):
+    def forward(self, input, ligand_embedding):
         #Analysis path forward feed
         out, residual_level1 = self.a_block1(input)
+
+        # reshape ligand embeddings
+        x = self.MLP1DTo3D_EN2(ligand_embedding)
+        print("Ligand embedding after MLP1DTo3D shape:", x.size())
+        out = torch.concat((x, out), dim=1)
         out, residual_level2 = self.a_block2(out)
+
+        x = self.MLP1DTo3D_EN3(ligand_embedding)
+        print("Ligand embedding after MLP1DTo3D shape:", x.size())
+        out = torch.concat((x, out), dim=1)
         out, residual_level3 = self.a_block3(out)
+
+        x = self.MLP1DTo3D_bottleneck(ligand_embedding)
+        print("Ligand embedding after MLP1DTo3D shape:", x.size())
+        out = torch.concat((x, out), dim=1)
         print("Entering bottleneck:", out.size())
         out, _ = self.bottleNeck(out)
 
@@ -199,5 +221,5 @@ class UNet3D(nn.Module):
 
 
 ## Check model parameter 
-model = UNet3D(in_channels=1, num_classes=1)
-print("Num params: ", sum(p.numel() for p in model.parameters()))
+# model = UNet3D(in_channels=1, num_classes=1)
+# print("Num params: ", sum(p.numel() for p in model.parameters()))
