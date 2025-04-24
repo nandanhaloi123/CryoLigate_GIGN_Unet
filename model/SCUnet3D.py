@@ -117,7 +117,15 @@ class Block(nn.Module):
         )
 
     def forward(self, x):
-        x = x + self.drop_path(self.msa(self.ln1(x)))
+        x = self.ln1(x)
+        print("After LayerNorm-7asdsa:", x.size())
+
+        x = self.msa(x)
+
+        x = self.drop_path(x)
+
+        # x = x + self.drop_path(self.msa(self.ln1(x)))
+
         x = x + self.drop_path(self.mlp(self.ln2(x)))
         return x
 
@@ -137,6 +145,7 @@ class ConvTransBlock(nn.Module):
             self.type = 'W'
 
         self.trans_block = Block(self.trans_dim, self.trans_dim, self.head_dim, self.window_size, self.drop_path, self.type, self.input_resolution)
+        # This is Conv3d-2 as per in the paper Suppl data 10
         self.conv1_1 = nn.Conv3d(self.conv_dim+self.trans_dim, self.conv_dim+self.trans_dim, 1, 1, 0, bias=True)
         self.conv1_2 = nn.Conv3d(self.conv_dim+self.trans_dim, self.conv_dim+self.trans_dim, 1, 1, 0, bias=True)
 
@@ -148,9 +157,18 @@ class ConvTransBlock(nn.Module):
                 )
 
     def forward(self, x):
-        conv_x, trans_x = torch.split(self.conv1_1(x), (self.conv_dim, self.trans_dim), dim=1)
+        conv1_1 = self.conv1_1(x)
+        print("After ConvTransBlock Conv3d-2:", conv1_1.size())
+        
+        conv_x, trans_x = torch.split(conv1_1, (self.conv_dim, self.trans_dim), dim=1)
+        print("After ConvTransBlock conv_x trans_x:", conv_x.size(), trans_x.size())
+        
         conv_x = self.conv_block(conv_x) + conv_x
+        print("After Going through the RConv block:", conv_x.size())
+
         trans_x = Rearrange('b c h w d -> b h w d c')(trans_x)
+        print("After Rearranging trans_x:", trans_x.size())
+
         trans_x = self.trans_block(trans_x)
         trans_x = Rearrange('b h w d c -> b c h w d')(trans_x)
         res = self.conv1_2(torch.cat((conv_x, trans_x), dim=1))
@@ -219,8 +237,9 @@ class SCUNet(nn.Module):
         self.m_tail = nn.Sequential(*self.m_tail)  
 
     def forward(self, x0):
-
+        print("Input shape:", x0.size())
         x1 = self.m_head(x0)
+        print("After Conv3d-1:", x1.size())
         x2 = self.m_down1(x1)
         x3 = self.m_down2(x2)
         x4 = self.m_down3(x3)
@@ -247,6 +266,6 @@ if __name__ == '__main__':
     # torch.cuda.empty_cache()
     net = SCUNet()
     print("Num params: ", sum(p.numel() for p in net.parameters()))
-    x = torch.randn((2, 1, 48, 48, 48))
+    x = torch.randn((1, 1, 48, 48, 48))
     x = net(x)
-    print(x.shape)
+    # print(x.shape)
