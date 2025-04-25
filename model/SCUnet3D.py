@@ -17,6 +17,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import sys
+import os
 import torch
 import numpy as np
 import torch.nn as nn
@@ -24,7 +26,10 @@ from einops import rearrange
 from einops.layers.torch import Rearrange
 from timm.models.layers import trunc_normal_, DropPath
 
-from frn import FilterResponseNorm3d
+sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
+
+from model.frn import FilterResponseNorm3d
+
 
 class WMSA(nn.Module):
     def __init__(self, input_dim, output_dim, head_dim, window_size, type):
@@ -236,9 +241,10 @@ class SCUNet(nn.Module):
         self.m_up1 = nn.Sequential(*self.m_up1)
         self.m_tail = nn.Sequential(*self.m_tail)  
 
-    def forward(self, x0):
-        print("Input shape:", x0.size())
-        x1 = self.m_head(x0)
+    def forward(self, data):
+        low_res_dens, ligand_embedding = data.low_res_dens, data.ligand_embedding
+        print("Input shape:", low_res_dens.size())
+        x1 = self.m_head(low_res_dens)
         print("After Conv3d-1:", x1.size())
         x2 = self.m_down1(x1)
         x3 = self.m_down2(x2)
@@ -261,11 +267,11 @@ class SCUNet(nn.Module):
             nn.init.constant_(m.weight, 1.0)
 
 
-if __name__ == '__main__':
+# if __name__ == '__main__':
 
-    # torch.cuda.empty_cache()
-    net = SCUNet()
-    print("Num params: ", sum(p.numel() for p in net.parameters()))
-    x = torch.randn((1, 1, 48, 48, 48))
-    x = net(x)
-    # print(x.shape)
+#     # torch.cuda.empty_cache()
+#     net = SCUNet()
+#     print("Num params: ", sum(p.numel() for p in net.parameters()))
+#     x = torch.randn((1, 1, 48, 48, 48))
+#     x = net(x)
+#     # print(x.shape)
