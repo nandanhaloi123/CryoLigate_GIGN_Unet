@@ -19,7 +19,7 @@ from sklearn.model_selection import KFold
 sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 
 from utils import AverageMeter
-from model.SCUnet3D import SCUNet
+from model.SCUnet3D_ligand_embedding import SCUNet
 from data_generation.generate_dataset import NetworkDataset, PLIDataLoader
 from config.config_dict import Config
 from log.train_logger import TrainLogger
@@ -38,8 +38,9 @@ class CustomLoss(nn.Module):
         """
         The forward method is used for training (loss.backward())
         """
-        # compute MSE loss
-        mse_loss = ((inputs - targets) ** 2).mean()
+        # compute L1 loss
+        # mse_loss = ((inputs - targets) ** 2).mean()
+        l1_loss = torch.abs(inputs - targets).mean()
 
         # compute SSIM loss
         epsilon = 1e-6
@@ -52,7 +53,7 @@ class CustomLoss(nn.Module):
         targets_var = targets.var(dim=(1, 2, 3, 4))
         ssim_loss = (1.0 - (2 * cov + epsilon) / (inputs_var + targets_var + epsilon)).mean()
 
-        return alpha*mse_loss + beta*ssim_loss
+        return alpha*l1_loss + beta*ssim_loss
     
     def separate_losses(self, inputs, targets):
         """
@@ -60,8 +61,9 @@ class CustomLoss(nn.Module):
         Required for logging and post-processing.
         """
         with torch.no_grad():
-            # compute MSE loss
-            mse_loss = ((inputs - targets) ** 2).mean()
+            # compute L1 loss
+            # mse_loss = ((inputs - targets) ** 2).mean()
+            l1_loss = torch.abs(inputs - targets).mean()
 
             # compute SSIM loss
             epsilon = 1e-6
@@ -74,7 +76,7 @@ class CustomLoss(nn.Module):
             targets_var = targets.var(dim=(1, 2, 3, 4))
             ssim_loss = (1.0 - (2 * cov + epsilon) / (inputs_var + targets_var + epsilon)).mean()
             
-        return mse_loss.item(), ssim_loss.item()
+        return l1_loss.item(), ssim_loss.item()
 
 
 def val(model, dataloader, device, criterion):
@@ -153,7 +155,7 @@ if __name__ == '__main__':
 
     # clear name for the model (to distinguish in the future)
     # model_name = f"k_{k}_Unet3D_with_Ligand_embeddings_Hybrid_loss_Norm_minmax_maps_Forward_model_bad_nconfs3_to_Good_res2.0_Batchsize_{batch_size}_lr_{lr:.1e}_wd_{wd:.1e}"
-    model_name = f"SCUnet3D_without_Ligand_embeddings_{alpha}MSE_{beta}SSIM_loss_Norm_minmax_maps_Forward_model_bad_nconfs3_to_Good_res2.0_Batchsize_{batch_size}_lr_{lr:.1e}_wd_{wd:.1e}"
+    model_name = f"SCUnet3D_with_Ligand_embeddings_{alpha}L1_{beta}SSIM_loss_Norm_minmax_maps_Forward_model_bad_nconfs3_to_Good_res2.0_Batchsize_{batch_size}_lr_{lr:.1e}_wd_{wd:.1e}"
 
     args["model_name"] = model_name
 

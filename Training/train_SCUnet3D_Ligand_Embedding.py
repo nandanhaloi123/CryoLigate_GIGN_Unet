@@ -19,7 +19,7 @@ from sklearn.model_selection import KFold
 sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 
 from utils import AverageMeter
-from model.SCUnet3D import SCUNet
+from model.SCUnet3D_ligand_embedding import SCUNet
 from data_generation.generate_dataset import NetworkDataset, PLIDataLoader
 from config.config_dict import Config
 from log.train_logger import TrainLogger
@@ -153,7 +153,7 @@ if __name__ == '__main__':
 
     # clear name for the model (to distinguish in the future)
     # model_name = f"k_{k}_Unet3D_with_Ligand_embeddings_Hybrid_loss_Norm_minmax_maps_Forward_model_bad_nconfs3_to_Good_res2.0_Batchsize_{batch_size}_lr_{lr:.1e}_wd_{wd:.1e}"
-    model_name = f"SCUnet3D_without_Ligand_embeddings_{alpha}MSE_{beta}SSIM_loss_Norm_minmax_maps_Forward_model_bad_nconfs3_to_Good_res2.0_Batchsize_{batch_size}_lr_{lr:.1e}_wd_{wd:.1e}"
+    model_name = f"SCUnet3D_with_Ligand_embeddings_{alpha}MSE_{beta}SSIM_loss_Norm_minmax_maps_Forward_model_bad_nconfs3_to_Good_res2.0_Batchsize_{batch_size}_lr_{lr:.1e}_wd_{wd:.1e}"
 
     args["model_name"] = model_name
 

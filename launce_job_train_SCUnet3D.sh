@@ -30,7 +30,7 @@ for alpha in "${alphas[@]}"; do
 #SBATCH -o slurm-%j.log
 export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
 
-python Training/train_SCUnet3D.py --alpha ${alpha} --beta ${beta}
+python Training/train_SCUnet3D_Ligand_Embedding_L1_Loss.py --alpha ${alpha} --beta ${beta}
 EOF
 
         chmod +x $job_script
