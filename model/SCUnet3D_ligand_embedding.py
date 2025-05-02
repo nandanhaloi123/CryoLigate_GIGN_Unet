@@ -182,33 +182,38 @@ class ConvTransBlock(nn.Module):
         return x
 
 
+
 class MLP1DTo3D(nn.Module):
-    def __init__(self, input_size, output_shape):
+    def __init__(self, input_size=768, initial_shape=(16, 4, 4, 4)):
         super(MLP1DTo3D, self).__init__()
-        self.output_shape = output_shape  # Shape you want to reshape to (A, B, C)
-        
-        level_channels=[256, 256*16, 256*32] 
-        hidden_size_1, hidden_size_2, hidden_size_3 = level_channels[0], level_channels[1], level_channels[2]
-        
-        # Define the MLP layers
-        self.fc1 = nn.Linear(input_size, hidden_size_1)
-        self.fc2 = nn.Linear(hidden_size_1, hidden_size_2)
-        self.fc3 = nn.Linear(hidden_size_2, hidden_size_3)
-        self.fc4 = nn.Linear(hidden_size_3, output_shape[0] * output_shape[1] * output_shape[2] * output_shape[3])
-    
+        self.initial_shape = initial_shape  # 16×4×4×4 = 1024
+
+        # Tiny MLP
+        self.fc = nn.Sequential(
+            nn.Linear(input_size, 256),
+            nn.ReLU(),
+            nn.Linear(256, np.prod(initial_shape)),
+            nn.ReLU()
+        )
+
+        # Minimal ConvTranspose3D stack: 4 → 8 → 16 → 32 → 48
+        self.upsample = nn.Sequential(
+            nn.ConvTranspose3d(16, 8, kernel_size=4, stride=2, padding=1),  # 4→8
+            nn.ReLU(),
+            nn.ConvTranspose3d(8, 4, kernel_size=4, stride=2, padding=1),   # 8→16
+            nn.ReLU(),
+            nn.ConvTranspose3d(4, 2, kernel_size=4, stride=2, padding=1),   # 16→32
+            nn.ReLU(),
+            nn.ConvTranspose3d(2, 1, kernel_size=3, stride=1, padding=0),   # 32→34
+            nn.Conv3d(1, 1, kernel_size=3, padding=8),                       # 34→48 (via padding)
+        )
+
     def forward(self, x):
-        x = torch.relu(self.fc1(x))
-        x = torch.relu(self.fc2(x))
-        x = torch.relu(self.fc3(x))
-        
-        # Output the desired number of elements to reshape into 3D
-        x = self.fc4(x)
-        
-        # Reshape the output to 3D
-        x = x.view(-1, *self.output_shape)  # Reshapes output to (batch_size, A, B, C)
-        
+        x = self.fc(x)
+        x = x.view(-1, *self.initial_shape)
+        x = self.upsample(x)
         return x
-    
+
 class SCUNet(nn.Module):
 
     def __init__(self, in_nc=2, config=[2,2,2,2,2,2,2], dim=32, drop_path_rate=0.2, input_resolution=48, head_dim=16, window_size=3, n_classes=1):
@@ -217,11 +222,8 @@ class SCUNet(nn.Module):
         self.dim = dim
         self.head_dim = head_dim
         self.window_size = window_size
-
-        output_shape = (1, 48, 48, 48)
-        embedding_size = 768
         
-        self.MLP1DTo3D = MLP1DTo3D(embedding_size, output_shape)
+        self.MLP1DTo3D = MLP1DTo3D()
 
         dpr = [x.item() for x in torch.linspace(0, drop_path_rate, sum(config))]
 
@@ -286,6 +288,7 @@ class SCUNet(nn.Module):
         print("Ligand embedding after MLP1DTo3D shape:", ligand_embedding.size())
 
         # concatenate with low-resolution maps
+        # x0 = low_res_dens
         x0 = torch.concat((ligand_embedding, low_res_dens), dim=1)
         print("Ligand embedding concat with Low res density shape:", x0.size())
 
@@ -312,11 +315,11 @@ class SCUNet(nn.Module):
             nn.init.constant_(m.weight, 1.0)
 
 
-# if __name__ == '__main__':
+if __name__ == '__main__':
 
-#     # torch.cuda.empty_cache()
-#     net = SCUNet()
-#     print("Num params: ", sum(p.numel() for p in net.parameters()))
-#     x = torch.randn((1, 1, 48, 48, 48))
-#     x = net(x)
-#     # print(x.shape)
+    # torch.cuda.empty_cache()
+    net = SCUNet()
+    print("Num params: ", sum(p.numel() for p in net.parameters()))
+    # x = torch.randn((1, 1, 48, 48, 48))
+    # x = net(x)
+    # print(x.shape)

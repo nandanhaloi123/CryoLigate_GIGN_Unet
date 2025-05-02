@@ -267,11 +267,11 @@ class SCUNet(nn.Module):
             nn.init.constant_(m.weight, 1.0)
 
 
-# if __name__ == '__main__':
+if __name__ == '__main__':
 
-#     # torch.cuda.empty_cache()
-#     net = SCUNet()
-#     print("Num params: ", sum(p.numel() for p in net.parameters()))
-#     x = torch.randn((1, 1, 48, 48, 48))
-#     x = net(x)
-#     # print(x.shape)
+    # torch.cuda.empty_cache()
+    net = SCUNet()
+    print("Num params: ", sum(p.numel() for p in net.parameters()))
+    # x = torch.randn((1, 1, 48, 48, 48))
+    # x = net(x)
+    # print(x.shape)

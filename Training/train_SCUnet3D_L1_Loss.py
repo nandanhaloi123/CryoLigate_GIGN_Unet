@@ -127,12 +127,12 @@ if __name__ == '__main__':
     config = Config(cfg)
     args = config.get_config()
     batch_size = 32
-    epochs = 300
+    epochs = 100
     lr = 5e-4
     wd = 1e-4
 
     parser = argparse.ArgumentParser(description="Train CryoLigate model with weighted loss")
-    parser.add_argument('--alpha', type=float, default=1.0, help='Weight for MSE loss')
+    parser.add_argument('--alpha', type=float, default=1.0, help='Weight for L1 loss')
     parser.add_argument('--beta', type=float, default=1.0, help='Weight for SSIM loss')
     args_cli = parser.parse_args()
 
@@ -253,7 +253,7 @@ if __name__ == '__main__':
         train_loss_ssim.reset()
         
         # average validation loss
-        epoch_val_mse, epoch_val_ssim = val(model, valid_loader, device, val_criterion)
+        epoch_val_mse, epoch_val_ssim = val(model, valid_loader, device, val_criterion, alpha, beta)
         total_val_loss = epoch_val_mse + epoch_val_ssim 
 
         # log training information: epochs, losses etc

@@ -55,7 +55,7 @@ class CustomLoss(nn.Module):
 
         return alpha*l1_loss + beta*ssim_loss
     
-    def separate_losses(self, inputs, targets):
+    def separate_losses(self, inputs, targets, alpha=1.0, beta=1.0):
         """
         Additional method that just outputs values of the two losses.
         Required for logging and post-processing.
@@ -76,10 +76,10 @@ class CustomLoss(nn.Module):
             targets_var = targets.var(dim=(1, 2, 3, 4))
             ssim_loss = (1.0 - (2 * cov + epsilon) / (inputs_var + targets_var + epsilon)).mean()
             
-        return l1_loss.item(), ssim_loss.item()
+        return alpha*l1_loss.item(), beta*ssim_loss.item()
 
 
-def val(model, dataloader, device, criterion):
+def val(model, dataloader, device, criterion, alpha=1.0, beta=1.0):
     """
     Computes losses on the validation set.
 
@@ -105,7 +105,7 @@ def val(model, dataloader, device, criterion):
         with torch.no_grad():
             pred = model(data)
             label = data.y
-            val_mse, val_ssim = criterion.separate_losses(pred, label)
+            val_mse, val_ssim = criterion.separate_losses(pred, label, alpha, beta)
             val_mse_loss.update(val_mse, label.size(0))
             val_ssim_loss.update(val_ssim, label.size(0))
 
@@ -127,12 +127,12 @@ if __name__ == '__main__':
     config = Config(cfg)
     args = config.get_config()
     batch_size = 32
-    epochs = 300
+    epochs = 100
     lr = 5e-4
     wd = 1e-4
 
     parser = argparse.ArgumentParser(description="Train CryoLigate model with weighted loss")
-    parser.add_argument('--alpha', type=float, default=1.0, help='Weight for MSE loss')
+    parser.add_argument('--alpha', type=float, default=1.0, help='Weight for L1 loss')
     parser.add_argument('--beta', type=float, default=1.0, help='Weight for SSIM loss')
     args_cli = parser.parse_args()
 
@@ -253,7 +253,7 @@ if __name__ == '__main__':
         train_loss_ssim.reset()
         
         # average validation loss
-        epoch_val_mse, epoch_val_ssim = val(model, valid_loader, device, val_criterion)
+        epoch_val_mse, epoch_val_ssim = val(model, valid_loader, device, val_criterion, alpha, beta)
         total_val_loss = epoch_val_mse + epoch_val_ssim 
 
         # log training information: epochs, losses etc
