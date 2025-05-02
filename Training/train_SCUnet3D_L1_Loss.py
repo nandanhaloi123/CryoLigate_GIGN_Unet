@@ -55,7 +55,7 @@ class CustomLoss(nn.Module):
 
         return alpha*l1_loss + beta*ssim_loss
     
-    def separate_losses(self, inputs, targets):
+    def separate_losses(self, inputs, targets, alpha=1.0, beta=1.0):
         """
         Additional method that just outputs values of the two losses.
         Required for logging and post-processing.
@@ -76,10 +76,10 @@ class CustomLoss(nn.Module):
             targets_var = targets.var(dim=(1, 2, 3, 4))
             ssim_loss = (1.0 - (2 * cov + epsilon) / (inputs_var + targets_var + epsilon)).mean()
             
-        return l1_loss.item(), ssim_loss.item()
+        return alpha*l1_loss.item(), beta*ssim_loss.item()
 
 
-def val(model, dataloader, device, criterion):
+def val(model, dataloader, device, criterion, alpha=1.0, beta=1.0):
     """
     Computes losses on the validation set.
 
@@ -105,7 +105,7 @@ def val(model, dataloader, device, criterion):
         with torch.no_grad():
             pred = model(data)
             label = data.y
-            val_mse, val_ssim = criterion.separate_losses(pred, label)
+            val_mse, val_ssim = criterion.separate_losses(pred, label, alpha, beta)
             val_mse_loss.update(val_mse, label.size(0))
             val_ssim_loss.update(val_ssim, label.size(0))
 
@@ -242,7 +242,7 @@ if __name__ == '__main__':
             optimizer.step()
 
             # compute and store training losses
-            train_mse, train_ssim = criterion.separate_losses(pred, label)
+            train_mse, train_ssim = criterion.separate_losses(pred, label, alpha, beta)
             train_loss_mse.update(train_mse, label.size(0))
             train_loss_ssim.update(train_ssim, label.size(0))
         

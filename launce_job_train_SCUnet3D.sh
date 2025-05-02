@@ -1,8 +1,8 @@
 #!/bin/bash
 
 # Define your hyperparameter values
-alphas=(1.0 3.0 5.0)
-betas=(1.0 3.0 5.0)
+alphas=(1.0 3.0 5.0 20.0)
+betas=(0.01 0.1 1.0)
 
 # Optional: limit the number of jobs
 MAX_JOBS=-1  # Set to -1 to run all combinations
@@ -25,12 +25,12 @@ for alpha in "${alphas[@]}"; do
 #!/bin/bash
 #SBATCH --gpus 1
 #SBATCH -t 3-00:00:00
-#SBATCH -J Unet${job_count}
+#SBATCH -J Lig${job_count}
 #SBATCH -e slurm-%j.log
 #SBATCH -o slurm-%j.log
 export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
 
-python Training/train_SCUnet3D_Ligand_Embedding_L1_Loss.py --alpha ${alpha} --beta ${beta}
+python Training/train_SCUnet3D_Ligand_Embedding.py --alpha ${alpha} --beta ${beta}
 EOF
 
         chmod +x $job_script
