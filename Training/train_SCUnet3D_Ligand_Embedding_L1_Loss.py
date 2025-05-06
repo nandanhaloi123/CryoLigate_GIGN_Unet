@@ -29,7 +29,7 @@ from utils import *
 
 class CustomLoss(nn.Module):
     """
-    The class for combined loss: MSE + SSIM 
+    The class for combined loss: L1 + SSIM 
     """
     def __init__(self):
         super(CustomLoss, self).__init__()
@@ -242,7 +242,7 @@ if __name__ == '__main__':
             optimizer.step()
 
             # compute and store training losses
-            train_mse, train_ssim = criterion.separate_losses(pred, label)
+            train_mse, train_ssim = criterion.separate_losses(pred, label, alpha, beta)
             train_loss_mse.update(train_mse, label.size(0))
             train_loss_ssim.update(train_ssim, label.size(0))
         

@@ -126,7 +126,7 @@ if __name__ == '__main__':
     cfg = 'TrainConfig_CryoLigate'
     config = Config(cfg)
     args = config.get_config()
-    batch_size = 32
+    batch_size = 4
     epochs = 100
     lr = 5e-4
     wd = 1e-4

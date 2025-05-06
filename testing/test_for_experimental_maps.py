@@ -70,16 +70,28 @@ if __name__ == "__main__":
         ""
     ]
 
+
+    # low_res_densities_names = [
+    #     "6ply_Ligand_Map_filtered_gaus_0.7_newscale_newbox.mrc",
+    # ]
+
+    # # list with the corresponding embeddings names
+    # # NOTE: generate embeddings and fill this list before run the code!
+    # embeddings_names = [
+    #     "",
+    # ]
+
+
     # specify the model and corresponding epoch (on which the model was saved) to process data
-    epoch = 253
+    epoch = 79
     model_path = os.path.join(
         os.getcwd(),
         "model_save_folder",
-        "k_7_only_final_unet_with_final_ReLU_L2loss_norm_minmax_maps_forward_model_bad_nconfs3_to_good_res2.0_batchsize_64_hidsize_256_levels_256_lr_5e-4_wd_1e-5_20250106_161358",
+        "SCUnet3D_without_Ligand_embeddings_20.0L1_0.1SSIM_loss_Norm_minmax_maps_Forward_model_bad_nconfs3_to_Good_res2.0_Batchsize_32_lr_5.0e-04_wd_1.0e-04_20250502_102045",
         "model",
         f"model_{epoch}.pkl"
     )  
-    model_name = f"L2_with_ReLU_k7_epoch{epoch}" # shorter name for the model to use in the processed map names 
+    model_name = f"SCUnet3D_20.0L1_0.1SSIM_Batchsize_32_Epoch{epoch}" # shorter name for the model to use in the processed map names 
     
     # load the model
     device = "cuda" if torch.cuda.is_available() else "cpu"
